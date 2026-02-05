@@ -1,13 +1,11 @@
 package org.acme.repository;
 
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
-import jakarta.enterprise.context.ApplicationScoped;
+import io.quarkus.hibernate.panache.PanacheRepository;
 import java.util.UUID;
 import org.acme.entity.Product;
+import org.hibernate.annotations.processing.Find;
 
-@ApplicationScoped
-public class ProductRepository implements PanacheRepositoryBase<Product, UUID> {
-    public Product findByName(String name) {
-        return find("name", name).firstResult();
-    }
+public interface ProductRepository extends PanacheRepository.Managed<Product, UUID> {
+    @Find
+    Product findByName(String name);
 }

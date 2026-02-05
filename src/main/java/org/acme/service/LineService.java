@@ -43,7 +43,7 @@ public class LineService {
             throw new IllegalArgumentException("Channel id is required.");
         }
         line.id = null;
-        line.persist();
+        lineRepository.persist(line);
         return line;
     }
 

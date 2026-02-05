@@ -1,13 +1,11 @@
 package org.acme.repository;
 
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
-import jakarta.enterprise.context.ApplicationScoped;
+import io.quarkus.hibernate.panache.PanacheRepository;
 import java.util.UUID;
 import org.acme.entity.Size;
+import org.hibernate.annotations.processing.Find;
 
-@ApplicationScoped
-public class SizeRepository implements PanacheRepositoryBase<Size, UUID> {
-    public Size findByName(String name) {
-        return find("name", name).firstResult();
-    }
+public interface SizeRepository extends PanacheRepository.Managed<Size, UUID> {
+    @Find
+    Size findByName(String name);
 }

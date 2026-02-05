@@ -1,13 +1,11 @@
 package org.acme.repository;
 
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
-import jakarta.enterprise.context.ApplicationScoped;
+import io.quarkus.hibernate.panache.PanacheRepository;
 import java.util.UUID;
 import org.acme.entity.Line;
+import org.hibernate.annotations.processing.Find;
 
-@ApplicationScoped
-public class LineRepository implements PanacheRepositoryBase<Line, UUID> {
-    public Line findByLineCode(String lineCode) {
-        return find("lineCode", lineCode).firstResult();
-    }
+public interface LineRepository extends PanacheRepository.Managed<Line, UUID> {
+    @Find
+    Line findByLineCode(String lineCode);
 }
