@@ -17,6 +17,7 @@ import jakarta.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import org.acme.entity.Line;
 import org.acme.service.LineService;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -27,6 +28,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Lines", description = "Line management endpoints")
+@RunOnVirtualThread
 public class LineResource {
     @Inject
     LineService lineService;

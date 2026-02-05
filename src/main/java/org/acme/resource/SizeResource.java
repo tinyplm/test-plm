@@ -17,6 +17,7 @@ import jakarta.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
@@ -27,6 +28,7 @@ import org.acme.service.SizeService;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Sizes", description = "Size management endpoints")
+@RunOnVirtualThread
 public class SizeResource {
     @Inject
     SizeService sizeService;
