@@ -26,10 +26,13 @@ class ProductResourceTest {
 
     @Test
     void createGetUpdateDeleteHappyPath() {
+        String lineId = createLine();
+
         Map<String, Object> payload = new HashMap<>();
         payload.put("name", "Test Widget");
         payload.put("price", new BigDecimal("12.34"));
         payload.put("quantity", 5);
+        payload.put("line", Map.of("id", lineId));
 
         Response createResponse = given()
                 .contentType(ContentType.JSON)
@@ -56,6 +59,7 @@ class ProductResourceTest {
         updatePayload.put("name", "Updated Widget");
         updatePayload.put("price", new BigDecimal("99.99"));
         updatePayload.put("quantity", 42);
+        updatePayload.put("line", Map.of("id", lineId));
 
         given()
                 .contentType(ContentType.JSON)
@@ -91,6 +95,7 @@ class ProductResourceTest {
         updatePayload.put("name", "Does Not Exist");
         updatePayload.put("price", new BigDecimal("1.23"));
         updatePayload.put("quantity", 1);
+        updatePayload.put("line", Map.of("id", createLine()));
 
         given()
                 .contentType(ContentType.JSON)
@@ -103,5 +108,24 @@ class ProductResourceTest {
                 .when().delete("/products/{id}", missingId)
                 .then()
                 .statusCode(404);
+    }
+
+    private String createLine() {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("lineCode", "TEST");
+        payload.put("seasonCode", "ALL");
+        payload.put("brandId", UUID.randomUUID().toString());
+        payload.put("marketId", UUID.randomUUID().toString());
+        payload.put("channelId", UUID.randomUUID().toString());
+
+        Response response = given()
+                .contentType(ContentType.JSON)
+                .body(payload)
+                .when().post("/lines")
+                .then()
+                .statusCode(201)
+                .extract().response();
+
+        return response.jsonPath().getString("id");
     }
 }
