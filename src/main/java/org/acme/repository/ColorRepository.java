@@ -1,13 +1,11 @@
 package org.acme.repository;
 
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
-import jakarta.enterprise.context.ApplicationScoped;
+import io.quarkus.hibernate.panache.PanacheRepository;
 import java.util.UUID;
 import org.acme.entity.Color;
+import org.hibernate.annotations.processing.Find;
 
-@ApplicationScoped
-public class ColorRepository implements PanacheRepositoryBase<Color, UUID> {
-    public Color findByName(String name) {
-        return find("name", name).firstResult();
-    }
+public interface ColorRepository extends PanacheRepository.Managed<Color, UUID> {
+    @Find
+    Color findByName(String name);
 }

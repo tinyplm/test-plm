@@ -31,7 +31,7 @@ public class SizeService {
             throw new IllegalArgumentException("Sizes value is required.");
         }
         size.id = null;
-        size.persist();
+        sizeRepository.persist(size);
         return size;
     }
 

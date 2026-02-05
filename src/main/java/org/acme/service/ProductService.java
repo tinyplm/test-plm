@@ -28,7 +28,7 @@ public class ProductService {
             throw new IllegalArgumentException("Product name is required.");
         }
         product.id = null;
-        product.persist();
+        productRepository.persist(product);
         return product;
     }
 

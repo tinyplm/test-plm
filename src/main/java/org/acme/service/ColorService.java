@@ -31,7 +31,7 @@ public class ColorService {
             throw new IllegalArgumentException("Color RGB is required.");
         }
         color.id = null;
-        color.persist();
+        colorRepository.persist(color);
         return color;
     }
 
