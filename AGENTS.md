@@ -24,6 +24,7 @@
 
 ## Coding Style & Naming Conventions
 - Java 25 is the target runtime (`maven.compiler.release=25`).
+- Every Entity will uuid as id, the generation will use Hibernate UuidGenerator.Style.TIME to generate UUIDv7, which gets saved in Postgres as UUIDv7
 - Use 4-space indentation and standard Java formatting.
 - Package names are lowercase (e.g., `org.acme`); class names use PascalCase.
 - Tests follow naming patterns: `*Test.java` for unit tests, `*IT.java` for integration tests.
