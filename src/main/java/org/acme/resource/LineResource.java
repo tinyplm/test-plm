@@ -19,7 +19,9 @@ import java.util.List;
 import java.util.UUID;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import org.acme.entity.Line;
+import org.acme.entity.Product;
 import org.acme.service.LineService;
+import org.acme.service.ProductService;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -32,6 +34,9 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 public class LineResource {
     @Inject
     LineService lineService;
+
+    @Inject
+    ProductService productService;
 
     @GET
     @Operation(summary = "List lines")
@@ -51,6 +56,20 @@ public class LineResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
         return Response.ok(line).build();
+    }
+
+    @GET
+    @Path("/{id}/products")
+    @Operation(summary = "List products for a line")
+    @APIResponse(responseCode = "200", description = "Products list")
+    @APIResponse(responseCode = "404", description = "Line not found")
+    public Response listProducts(@PathParam("id") UUID id) {
+        Line line = lineService.findById(id);
+        if (line == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        List<Product> products = productService.listByLineId(id);
+        return Response.ok(products).build();
     }
 
     @POST
