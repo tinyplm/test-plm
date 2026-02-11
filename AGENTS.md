@@ -1,15 +1,15 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `src/main/java/org/acme/entity/` contains JPA entities (`Product`, `Color`, `Size`, `Line`).
+- `src/main/java/org/acme/entity/` contains JPA entities (`Product`, `Color`, `Size`, `Line`, `Vendor`, `ProductVendorSourcing`).
 - `src/main/java/org/acme/repository/` contains Panache Next repositories.
 - `src/main/java/org/acme/service/` contains business logic and persistence workflows.
 - `src/main/java/org/acme/resource/` contains REST endpoints.
 - `src/main/resources/` holds configuration like `application.properties`.
-- `src/main/resources/db/migration/` contains Flyway migrations (`V1__create_product.sql` through `V6__create_line.sql`).
+- `src/main/resources/db/migration/` contains Flyway migrations (`V1__create_product.sql` through `V9__create_product_vendor_sourcing.sql`).
 - `src/main/docker/` includes Dockerfiles for JVM, legacy JAR, and native images.
 - `.github/workflows/` holds CI workflows.
-- `src/test/java/` contains REST Assured tests for `/products`, `/colors`, and `/sizes`.
+- `src/test/java/` contains REST Assured tests for existing REST resources.
 - `target/` is build output. Do not edit by hand.
 
 ## Build, Test, and Development Commands
@@ -21,10 +21,11 @@
 - `./mvnw package -Dnative` builds a native image (requires GraalVM).
 - `./mvnw package -Dnative -Dquarkus.native.container-build=true` builds a native image in a container.
 - `just dev`, `just test`, `just package` provide shortcuts to common tasks.
+- `just commit` stages all changes, asks `codex` to draft a commit message, then commits.
 
 ## Coding Style & Naming Conventions
 - Java 25 is the target runtime (`maven.compiler.release=25`).
-- Every Entity will uuid as id, the generation will use Hibernate UuidGenerator.Style.TIME to generate UUIDv7, which gets saved in Postgres as UUIDv7
+- Every entity uses UUID primary key generation with `@UuidGenerator(style = UuidGenerator.Style.TIME)`.
 - Use 4-space indentation and standard Java formatting.
 - Package names are lowercase (e.g., `org.acme`); class names use PascalCase.
 - Tests follow naming patterns: `*Test.java` for unit tests, `*IT.java` for integration tests.
@@ -47,7 +48,11 @@
 - Seed data is inserted via Flyway (`V2__seed_products.sql`, `V4__seed_colors.sql`).
 
 ## API Notes
-- Base paths: `/products`, `/colors`, `/sizes`, `/lines`.
+- Base paths: `/products`, `/colors`, `/sizes`, `/lines`, `/vendors`.
 - CRUD endpoints exist for each base path: `POST`, `GET`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`.
+- Nested endpoints:
+- `GET /lines/{id}/products` lists products for a line.
+- `/products/{productId}/vendors` manages sourcing links:
+- `GET`, `POST`, `PUT` (replace all), `PATCH /{linkId}`, `DELETE /{linkId}`.
 - Uses JSON payloads; create/update return `400` for invalid bodies and `404` when not found.
 - Resources are annotated with `@RunOnVirtualThread` and OpenAPI `@Tag`.
