@@ -1,3 +1,16 @@
+-- Create Color Table
+CREATE TABLE IF NOT EXISTS color (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description VARCHAR(255),
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now(),
+    rgb VARCHAR(50) NOT NULL
+);
+
+CREATE UNIQUE INDEX color_id_idx ON color(id);
+
+-- Seed Color Data
 INSERT INTO color (id, name, description, rgb)
 VALUES
     ('018f2e76-3b10-7c9a-8a2f-4f1b5e2a1d01', 'Crimson', 'Deep red with rich saturation.', '220,20,60'),
