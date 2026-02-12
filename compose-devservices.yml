@@ -7,9 +7,19 @@ services:
       timeout: 3s
       retries: 3
     ports:
-      - '5432'
+      - '5432:5432'
     environment:
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: mydb
 
+  rustfs:
+    image: rustfs/rustfs:latest
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - rustfs-data:/data
+
+volumes:
+  rustfs-data:
