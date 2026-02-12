@@ -30,6 +30,15 @@ class ProductResourceTest {
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("name", "Test Widget");
+        payload.put("lifecycle", "ACTIVE");
+        payload.put("assortment", "CORE");
+        payload.put("buyPlan", "Annual Buy Plan");
+        payload.put("storeCost", new BigDecimal("6.10"));
+        payload.put("retailCost", new BigDecimal("18.50"));
+        payload.put("margin", new BigDecimal("67.03"));
+        payload.put("buyer", "Alex Buyer");
+        payload.put("setWeek", 12);
+        payload.put("inspiration", "Street utility trend board.");
         payload.put("price", new BigDecimal("12.34"));
         payload.put("quantity", 5);
         payload.put("line", Map.of("id", lineId));
@@ -42,6 +51,15 @@ class ProductResourceTest {
                 .statusCode(201)
                 .body("id", notNullValue())
                 .body("name", equalTo("Test Widget"))
+                .body("lifecycle", equalTo("ACTIVE"))
+                .body("assortment", equalTo("CORE"))
+                .body("buyPlan", equalTo("Annual Buy Plan"))
+                .body("storeCost", equalTo(6.10f))
+                .body("retailCost", equalTo(18.50f))
+                .body("margin", equalTo(67.03f))
+                .body("buyer", equalTo("Alex Buyer"))
+                .body("setWeek", equalTo(12))
+                .body("inspiration", equalTo("Street utility trend board."))
                 .body("quantity", equalTo(5))
                 .extract().response();
 
@@ -53,10 +71,28 @@ class ProductResourceTest {
                 .statusCode(200)
                 .body("id", equalTo(id))
                 .body("name", equalTo("Test Widget"))
+                .body("lifecycle", equalTo("ACTIVE"))
+                .body("assortment", equalTo("CORE"))
+                .body("buyPlan", equalTo("Annual Buy Plan"))
+                .body("storeCost", equalTo(6.10f))
+                .body("retailCost", equalTo(18.50f))
+                .body("margin", equalTo(67.03f))
+                .body("buyer", equalTo("Alex Buyer"))
+                .body("setWeek", equalTo(12))
+                .body("inspiration", equalTo("Street utility trend board."))
                 .body("quantity", equalTo(5));
 
         Map<String, Object> updatePayload = new HashMap<>();
         updatePayload.put("name", "Updated Widget");
+        updatePayload.put("lifecycle", "PHASE_OUT");
+        updatePayload.put("assortment", "SEASONAL");
+        updatePayload.put("buyPlan", "Holiday Buy Plan");
+        updatePayload.put("storeCost", new BigDecimal("9.50"));
+        updatePayload.put("retailCost", new BigDecimal("29.99"));
+        updatePayload.put("margin", new BigDecimal("68.32"));
+        updatePayload.put("buyer", "Jamie Buyer");
+        updatePayload.put("setWeek", 42);
+        updatePayload.put("inspiration", "Performance outdoor capsule.");
         updatePayload.put("price", new BigDecimal("99.99"));
         updatePayload.put("quantity", 42);
         updatePayload.put("line", Map.of("id", lineId));
@@ -69,6 +105,15 @@ class ProductResourceTest {
                 .statusCode(200)
                 .body("id", equalTo(id))
                 .body("name", equalTo("Updated Widget"))
+                .body("lifecycle", equalTo("PHASE_OUT"))
+                .body("assortment", equalTo("SEASONAL"))
+                .body("buyPlan", equalTo("Holiday Buy Plan"))
+                .body("storeCost", equalTo(9.50f))
+                .body("retailCost", equalTo(29.99f))
+                .body("margin", equalTo(68.32f))
+                .body("buyer", equalTo("Jamie Buyer"))
+                .body("setWeek", equalTo(42))
+                .body("inspiration", equalTo("Performance outdoor capsule."))
                 .body("quantity", equalTo(42));
 
         given()
