@@ -18,8 +18,18 @@ services:
     ports:
       - '9000:9000'
       - '9001:9001'
+    environment:
+      RUSTFS_ACCESS_KEY: plm-rustfs-user
+      RUSTFS_SECRET_KEY: plm-rustfs-secret
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_LOG: info
     volumes:
       - rustfs-data:/data
+      - rustfs-logs:/logs
+    restart: unless-stopped
 
 volumes:
   rustfs-data:
+  rustfs-logs:

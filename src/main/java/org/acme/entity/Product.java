@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -52,6 +53,12 @@ public class Product implements PanacheEntity.Managed {
     public Integer setWeek;
 
     public String inspiration;
+
+    @Column(name = "image_reference")
+    public String imageReference;
+
+    @Transient
+    public String imageUrl;
 
     public BigDecimal price;
 

@@ -16,6 +16,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -98,5 +99,58 @@ public class ProductResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
         return Response.noContent().build();
+    }
+
+    @POST
+    @Path("/{id}/image")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    @Operation(summary = "Upload product image")
+    @APIResponse(responseCode = "200", description = "Product image uploaded")
+    @APIResponse(responseCode = "400", description = "Invalid image payload or image already exists")
+    @APIResponse(responseCode = "404", description = "Product not found")
+    public Response addImage(@PathParam("id") UUID id, byte[] imageBytes) {
+        try {
+            Product product = productService.addImage(id, imageBytes);
+            return Response.ok(product).build();
+        } catch (IllegalArgumentException exception) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        } catch (NoSuchElementException exception) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+    }
+
+    @PUT
+    @Path("/{id}/image")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    @Operation(summary = "Replace product image")
+    @APIResponse(responseCode = "200", description = "Product image replaced")
+    @APIResponse(responseCode = "400", description = "Invalid image payload")
+    @APIResponse(responseCode = "404", description = "Product not found")
+    public Response updateImage(@PathParam("id") UUID id, byte[] imageBytes) {
+        try {
+            Product product = productService.updateImage(id, imageBytes);
+            return Response.ok(product).build();
+        } catch (IllegalArgumentException exception) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        } catch (NoSuchElementException exception) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+    }
+
+    @DELETE
+    @Path("/{id}/image")
+    @Operation(summary = "Remove product image")
+    @APIResponse(responseCode = "204", description = "Product image removed")
+    @APIResponse(responseCode = "404", description = "Product or image not found")
+    public Response removeImage(@PathParam("id") UUID id) {
+        try {
+            boolean removed = productService.removeImage(id);
+            if (!removed) {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
+            return Response.noContent().build();
+        } catch (NoSuchElementException exception) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
     }
 }

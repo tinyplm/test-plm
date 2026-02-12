@@ -3,6 +3,7 @@ package org.acme;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
@@ -60,6 +61,7 @@ class ProductResourceTest {
                 .body("buyer", equalTo("Alex Buyer"))
                 .body("setWeek", equalTo(12))
                 .body("inspiration", equalTo("Street utility trend board."))
+                .body("imageUrl", nullValue())
                 .body("quantity", equalTo(5))
                 .extract().response();
 
@@ -80,6 +82,7 @@ class ProductResourceTest {
                 .body("buyer", equalTo("Alex Buyer"))
                 .body("setWeek", equalTo(12))
                 .body("inspiration", equalTo("Street utility trend board."))
+                .body("imageUrl", nullValue())
                 .body("quantity", equalTo(5));
 
         Map<String, Object> updatePayload = new HashMap<>();
@@ -114,6 +117,7 @@ class ProductResourceTest {
                 .body("buyer", equalTo("Jamie Buyer"))
                 .body("setWeek", equalTo(42))
                 .body("inspiration", equalTo("Performance outdoor capsule."))
+                .body("imageUrl", nullValue())
                 .body("quantity", equalTo(42));
 
         given()
