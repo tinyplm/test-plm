@@ -246,7 +246,8 @@ class VendorQuoteResourceTest {
         payload.put("totalCost", new BigDecimal("7.9000"));
         payload.put("capacityPerMonth", 25000);
         payload.put("paymentTerms", "Net 45");
-        payload.put("validFrom", LocalDate.now().toString());
+        LocalDate validFrom = validTo.isBefore(LocalDate.now()) ? validTo.minusDays(7) : LocalDate.now();
+        payload.put("validFrom", validFrom.toString());
         payload.put("validTo", validTo.toString());
         payload.put("complianceNotes", "Factory passed audit.");
         payload.put("sustainabilityNotes", "Recycled packaging.");

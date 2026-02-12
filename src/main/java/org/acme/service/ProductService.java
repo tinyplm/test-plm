@@ -66,6 +66,16 @@ public class ProductService {
         }
         existing.name = product.name;
         existing.line = line;
+        existing.description = product.description;
+        existing.lifecycle = product.lifecycle;
+        existing.assortment = product.assortment;
+        existing.buyPlan = product.buyPlan;
+        existing.storeCost = product.storeCost;
+        existing.retailCost = product.retailCost;
+        existing.margin = product.margin;
+        existing.buyer = product.buyer;
+        existing.setWeek = product.setWeek;
+        existing.inspiration = product.inspiration;
         existing.price = product.price;
         existing.quantity = product.quantity;
         return existing;
