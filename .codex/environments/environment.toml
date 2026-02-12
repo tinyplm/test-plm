@@ -3,9 +3,42 @@ version = 1
 name = "test-plm"
 
 [setup]
-script = ""
+script = """
+export QUARKUS_LIVE_RELOAD=true
+./mvnw clean install -DskipTests
+"""
 
 [[actions]]
-name = "Run"
-icon = "run"
-command = "quarkus dev"
+name = "Dev: JVM"
+icon = "play"
+command = "mvn quarkus:dev"
+
+[[actions]]
+name = "Dev: Hot Reload"
+command = "mvn quarkus:dev -Dquarkus.live-reload=true"
+
+[[actions]]
+name = "Dev: Native"
+icon = "rocket"
+command = "mvn package -Pnative -Dquarkus.native.container-build=true && ./target/*-runner"
+
+[[actions]]
+name = "Test"
+icon = "check"
+command = "mvn test"
+
+[[actions]]
+name = "Format"
+icon = "formatter"
+command = "./mvnw fmt:format"
+
+[[actions]]
+name = "Lint"
+icon = "lint"
+command = "./mvnw checkstyle:check"
+
+[[actions]]
+name = "Open API UI"
+command = "open http://localhost:8080/swagger-ui"
+
+
