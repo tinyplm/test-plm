@@ -31,6 +31,28 @@ public class Product implements PanacheEntity.Managed {
 
     public String description;
 
+    public String lifecycle;
+
+    public String assortment;
+
+    @Column(name = "buy_plan")
+    public String buyPlan;
+
+    @Column(name = "store_cost")
+    public BigDecimal storeCost;
+
+    @Column(name = "retail_cost")
+    public BigDecimal retailCost;
+
+    public BigDecimal margin;
+
+    public String buyer;
+
+    @Column(name = "set_week")
+    public Integer setWeek;
+
+    public String inspiration;
+
     public BigDecimal price;
 
     public int quantity;
