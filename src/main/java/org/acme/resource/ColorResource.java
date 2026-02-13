@@ -1,9 +1,7 @@
 package org.acme.resource;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -23,6 +21,7 @@ import io.smallrye.common.annotation.RunOnVirtualThread;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.acme.dto.ColorRequest;
 import org.acme.entity.Color;
 import org.acme.service.ColorService;
 
@@ -107,18 +106,9 @@ public class ColorResource {
             return null;
         }
         Color color = new Color();
-        color.name = request.name;
-        color.description = request.description;
-        color.rgb = request.rgb;
+        color.name = request.name();
+        color.description = request.description();
+        color.rgb = request.rgb();
         return color;
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class ColorRequest {
-        @NotBlank
-        public String name;
-        public String description;
-        @NotBlank
-        public String rgb;
     }
 }
