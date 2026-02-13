@@ -25,6 +25,12 @@ public class Color implements PanacheEntity.Managed {
 
     public String description;
 
+    @Column(name = "created_by")
+    public String createdBy;
+
+    @Column(name = "updated_by")
+    public String updatedBy;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     public LocalDateTime createdAt;
