@@ -1,7 +1,9 @@
 package org.acme.resource;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -57,10 +59,10 @@ public class ColorResource {
     @Operation(summary = "Create a color")
     @APIResponse(responseCode = "201", description = "Color created")
     @APIResponse(responseCode = "400", description = "Invalid color payload")
-    public Response create(@Valid Color color, @Context UriInfo uriInfo) {
+    public Response create(@Valid ColorRequest request, @Context UriInfo uriInfo) {
         Color created;
         try {
-            created = colorService.create(color);
+            created = colorService.create(toColor(request));
         } catch (IllegalArgumentException exception) {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
@@ -74,10 +76,10 @@ public class ColorResource {
     @APIResponse(responseCode = "200", description = "Color updated")
     @APIResponse(responseCode = "400", description = "Invalid color payload")
     @APIResponse(responseCode = "404", description = "Color not found")
-    public Response update(@PathParam("id") UUID id, @Valid Color color) {
+    public Response update(@PathParam("id") UUID id, @Valid ColorRequest request) {
         Color updated;
         try {
-            updated = colorService.update(id, color);
+            updated = colorService.update(id, toColor(request));
         } catch (IllegalArgumentException exception) {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
@@ -98,5 +100,25 @@ public class ColorResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
         return Response.noContent().build();
+    }
+
+    private Color toColor(ColorRequest request) {
+        if (request == null) {
+            return null;
+        }
+        Color color = new Color();
+        color.name = request.name;
+        color.description = request.description;
+        color.rgb = request.rgb;
+        return color;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ColorRequest {
+        @NotBlank
+        public String name;
+        public String description;
+        @NotBlank
+        public String rgb;
     }
 }

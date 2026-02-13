@@ -29,6 +29,9 @@ class ColorResourceTest {
         payload.put("name", "Test Red");
         payload.put("description", "Test red description.");
         payload.put("rgb", "255,0,0");
+        payload.put("id", UUID.randomUUID().toString());
+        payload.put("createdAt", "2001-01-01T00:00:00");
+        payload.put("updatedAt", "2001-01-01T00:00:00");
 
         Response createResponse = given()
                 .contentType(ContentType.JSON)
@@ -55,6 +58,9 @@ class ColorResourceTest {
         updatePayload.put("name", "Updated Red");
         updatePayload.put("description", "Updated red description.");
         updatePayload.put("rgb", "200,0,0");
+        updatePayload.put("id", UUID.randomUUID().toString());
+        updatePayload.put("createdAt", "2001-01-01T00:00:00");
+        updatePayload.put("updatedAt", "2001-01-01T00:00:00");
 
         given()
                 .contentType(ContentType.JSON)
