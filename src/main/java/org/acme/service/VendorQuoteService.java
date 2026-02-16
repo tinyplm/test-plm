@@ -67,32 +67,56 @@ public class VendorQuoteService {
     }
 
     @Transactional
-    public VendorQuote create(UUID productId, UUID linkId, VendorQuoteCommand command) {
+    public VendorQuote create(UUID productId, UUID linkId, VendorQuote quote) {
         ProductVendorSourcing link = getLinkOrThrow(productId, linkId);
-        validateQuoteCommand(command);
-        ensureUniqueQuoteVersion(linkId, command.quoteNumber(), command.versionNumber(), null);
+        ensureUniqueQuoteVersion(linkId, quote.quoteNumber, quote.versionNumber, null);
 
-        VendorQuote quote = new VendorQuote();
-        applyCommand(quote, link, command);
+        quote.productVendorSourcing = link;
         quote.status = VendorQuoteStatus.SUBMITTED;
         quote.submittedAt = LocalDateTime.now();
-        quote.submittedBy = command.createdBy();
+        // quote.submittedBy set by caller or from context? Assuming passed in entity for now or handle later
         quote.deleted = false;
         vendorQuoteRepository.persist(quote);
         return quote;
     }
 
     @Transactional
-    public VendorQuote update(UUID productId, UUID linkId, UUID quoteId, VendorQuoteCommand command) {
-        validateQuoteCommand(command);
-
+    public VendorQuote update(UUID productId, UUID linkId, UUID quoteId, VendorQuote updateData, long version) {
         VendorQuote quote = findById(productId, linkId, quoteId, false);
+        
+        if (quote.version != version) {
+            throw new jakarta.persistence.OptimisticLockException("Version mismatch. Expected " + version + " but found " + quote.version);
+        }
+
         if (quote.status == VendorQuoteStatus.APPROVED) {
             throw new IllegalArgumentException("Approved quote cannot be updated.");
         }
 
-        ensureUniqueQuoteVersion(linkId, command.quoteNumber(), command.versionNumber(), quote.id);
-        applyCommand(quote, quote.productVendorSourcing, command);
+        ensureUniqueQuoteVersion(linkId, updateData.quoteNumber, updateData.versionNumber, quote.id);
+        
+        quote.quoteNumber = updateData.quoteNumber;
+        quote.versionNumber = updateData.versionNumber;
+        quote.currencyCode = updateData.currencyCode != null ? updateData.currencyCode.toUpperCase() : null;
+        quote.incoterm = updateData.incoterm;
+        quote.unitCost = updateData.unitCost;
+        quote.moq = updateData.moq;
+        quote.leadTimeDays = updateData.leadTimeDays;
+        quote.sampleLeadTimeDays = updateData.sampleLeadTimeDays;
+        quote.materialCost = updateData.materialCost;
+        quote.laborCost = updateData.laborCost;
+        quote.overheadCost = updateData.overheadCost;
+        quote.logisticsCost = updateData.logisticsCost;
+        quote.dutyCost = updateData.dutyCost;
+        quote.packagingCost = updateData.packagingCost;
+        quote.marginPercent = updateData.marginPercent;
+        quote.totalCost = updateData.totalCost;
+        quote.capacityPerMonth = updateData.capacityPerMonth;
+        quote.paymentTerms = updateData.paymentTerms;
+        quote.validFrom = updateData.validFrom;
+        quote.validTo = updateData.validTo;
+        quote.complianceNotes = updateData.complianceNotes;
+        quote.sustainabilityNotes = updateData.sustainabilityNotes;
+        
         return quote;
     }
 
@@ -144,54 +168,6 @@ public class VendorQuoteService {
         return true;
     }
 
-    private void validateQuoteCommand(VendorQuoteCommand command) {
-        if (command == null) {
-            throw new IllegalArgumentException("Vendor quote payload is required.");
-        }
-        if (command.quoteNumber() == null || command.quoteNumber().isBlank()) {
-            throw new IllegalArgumentException("Quote number is required.");
-        }
-        if (command.versionNumber() == null || command.versionNumber() < 1) {
-            throw new IllegalArgumentException("Version number must be at least 1.");
-        }
-        if (command.currencyCode() == null || command.currencyCode().isBlank()) {
-            throw new IllegalArgumentException("Currency code is required.");
-        }
-        if (command.unitCost() == null || command.unitCost().compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Unit cost must be zero or positive.");
-        }
-        if (command.moq() == null || command.moq() < 0) {
-            throw new IllegalArgumentException("MOQ must be zero or positive.");
-        }
-        if (command.leadTimeDays() == null || command.leadTimeDays() < 0) {
-            throw new IllegalArgumentException("Lead time must be zero or positive.");
-        }
-        if (command.sampleLeadTimeDays() != null && command.sampleLeadTimeDays() < 0) {
-            throw new IllegalArgumentException("Sample lead time must be zero or positive.");
-        }
-        if (command.validFrom() != null && command.validTo() != null && command.validTo().isBefore(command.validFrom())) {
-            throw new IllegalArgumentException("Quote validity dates are invalid.");
-        }
-        validateNonNegative(command.materialCost(), "Material cost must be zero or positive.");
-        validateNonNegative(command.laborCost(), "Labor cost must be zero or positive.");
-        validateNonNegative(command.overheadCost(), "Overhead cost must be zero or positive.");
-        validateNonNegative(command.logisticsCost(), "Logistics cost must be zero or positive.");
-        validateNonNegative(command.dutyCost(), "Duty cost must be zero or positive.");
-        validateNonNegative(command.packagingCost(), "Packaging cost must be zero or positive.");
-        validateNonNegative(command.marginPercent(), "Margin percent must be zero or positive.");
-        validateNonNegative(command.totalCost(), "Total cost must be zero or positive.");
-
-        if (command.capacityPerMonth() != null && command.capacityPerMonth() < 0) {
-            throw new IllegalArgumentException("Capacity per month must be zero or positive.");
-        }
-    }
-
-    private void validateNonNegative(BigDecimal value, String message) {
-        if (value != null && value.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException(message);
-        }
-    }
-
     private void ensureUniqueQuoteVersion(UUID linkId, String quoteNumber, Integer versionNumber, UUID currentQuoteId) {
         VendorQuote duplicate = vendorQuoteRepository.findByLinkAndQuoteAndVersion(linkId, quoteNumber, versionNumber);
         if (duplicate == null) {
@@ -217,32 +193,5 @@ public class VendorQuoteService {
             throw new NoSuchElementException("Product vendor link not found.");
         }
         return link;
-    }
-
-    private void applyCommand(VendorQuote quote, ProductVendorSourcing link, VendorQuoteCommand command) {
-        quote.productVendorSourcing = link;
-        quote.quoteNumber = command.quoteNumber();
-        quote.versionNumber = command.versionNumber();
-        quote.currencyCode = command.currencyCode().toUpperCase();
-        quote.incoterm = command.incoterm();
-        quote.unitCost = command.unitCost();
-        quote.moq = command.moq();
-        quote.leadTimeDays = command.leadTimeDays();
-        quote.sampleLeadTimeDays = command.sampleLeadTimeDays();
-        quote.materialCost = command.materialCost();
-        quote.laborCost = command.laborCost();
-        quote.overheadCost = command.overheadCost();
-        quote.logisticsCost = command.logisticsCost();
-        quote.dutyCost = command.dutyCost();
-        quote.packagingCost = command.packagingCost();
-        quote.marginPercent = command.marginPercent();
-        quote.totalCost = command.totalCost();
-        quote.capacityPerMonth = command.capacityPerMonth();
-        quote.paymentTerms = command.paymentTerms();
-        quote.validFrom = command.validFrom();
-        quote.validTo = command.validTo();
-        quote.complianceNotes = command.complianceNotes();
-        quote.sustainabilityNotes = command.sustainabilityNotes();
-        quote.createdBy = command.createdBy();
     }
 }

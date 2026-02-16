@@ -298,10 +298,10 @@ Before merging:
 * [ ] DTO separation implemented
 * [ ] No entity exposure
 * [ ] No audit fields in requests
-* [ ] Pagination implemented
-* [ ] Default page size enforced
+* [ ] Pagination implemented (where required)
 * [ ] Version included in responses
 * [ ] Correct HTTP status codes used
+* [ ] Logging implemented for Create/Update/Delete operations using JBoss Logging
 
 ---
 
@@ -323,3 +323,22 @@ If two resources behave differently for the same operation, the API design is in
 Consistency takes precedence over convenience.
 
 ---
+
+# 16. Logging Conventions
+
+Every resource MUST perform logging for state-changing operations (Create, Update, Delete) to facilitate auditability and troubleshooting.
+
+*   Use `org.jboss.logging.Logger`.
+*   Log at `INFO` level for successful initiations or completions of these operations.
+*   Log relevant identifiers (e.g., name for Create, ID for Update/Delete).
+
+Example:
+```java
+private static final Logger LOG = Logger.getLogger(MyResource.class);
+
+@POST
+public Response create(CreateRequest request) {
+    LOG.infof("Creating resource: %s", request.name());
+    ...
+}
+```

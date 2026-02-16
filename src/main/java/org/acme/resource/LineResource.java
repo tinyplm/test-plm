@@ -6,14 +6,12 @@ import jakarta.persistence.OptimisticLockException;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -24,10 +22,10 @@ import org.acme.dto.LineDTO;
 import org.acme.entity.Line;
 import org.acme.mapper.LineMapper;
 import org.acme.service.LineService;
-import org.acme.util.PageResult;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.jboss.logging.Logger;
 
 @Path("/lines")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -36,6 +34,8 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @RunOnVirtualThread
 public class LineResource {
 
+    private static final Logger LOG = Logger.getLogger(LineResource.class);
+
     @Inject
     LineService lineService;
 
@@ -43,21 +43,12 @@ public class LineResource {
     LineMapper lineMapper;
 
     @GET
-    @Operation(summary = "List lines (paged)")
-    @APIResponse(responseCode = "200", description = "Paged Lines list")
-    public PageResult<LineDTO.Response> list(
-            @QueryParam("page") @DefaultValue("0") int page,
-            @QueryParam("size") @DefaultValue("20") int size
-    ) {
-        if (size > 100) size = 100; // Clamp max size
-        PageResult<Line> result = lineService.list(page, size);
-        return new PageResult<>(
-                result.items().stream().map(lineMapper::toResponse).toList(),
-                result.page(),
-                result.size(),
-                result.totalElements(),
-                result.totalPages()
-        );
+    @Operation(summary = "List lines")
+    @APIResponse(responseCode = "200", description = "Lines list")
+    public java.util.List<LineDTO.Response> list() {
+        return lineService.list().stream()
+                .map(lineMapper::toResponse)
+                .toList();
     }
 
     @GET
@@ -78,6 +69,7 @@ public class LineResource {
     @APIResponse(responseCode = "201", description = "Line created")
     @APIResponse(responseCode = "400", description = "Invalid line payload")
     public Response create(@Valid LineDTO.Create request, @Context UriInfo uriInfo) {
+        LOG.infof("Creating line: %s", request.lineCode());
         Line created;
         try {
             created = lineService.create(lineMapper.toEntity(request));
@@ -96,6 +88,7 @@ public class LineResource {
     @APIResponse(responseCode = "404", description = "Line not found")
     @APIResponse(responseCode = "409", description = "Optimistic lock failure (version mismatch)")
     public Response update(@PathParam("id") UUID id, @Valid LineDTO.Update request) {
+        LOG.infof("Updating line with id: %s", id);
         Line updated;
         try {
             Line updateData = new Line();
@@ -120,6 +113,7 @@ public class LineResource {
     @APIResponse(responseCode = "204", description = "Line deleted")
     @APIResponse(responseCode = "404", description = "Line not found")
     public Response delete(@PathParam("id") UUID id) {
+        LOG.infof("Deleting line with id: %s", id);
         boolean deleted = lineService.delete(id);
         if (!deleted) {
             return Response.status(Response.Status.NOT_FOUND).build();

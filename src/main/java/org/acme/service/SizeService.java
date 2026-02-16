@@ -36,16 +36,19 @@ public class SizeService {
     }
 
     @Transactional
-    public Size update(UUID id, Size size) {
-        if (size == null) {
+    public Size update(UUID id, Size updateData, long version) {
+        if (updateData == null) {
             throw new IllegalArgumentException("Size payload is required.");
         }
         Size existing = sizeRepository.findById(id);
         if (existing == null) {
             return null;
         }
-        existing.name = size.name;
-        existing.sizes = size.sizes;
+        if (existing.version != version) {
+            throw new jakarta.persistence.OptimisticLockException("Version mismatch. Expected " + version + " but found " + existing.version);
+        }
+        existing.name = updateData.name;
+        existing.sizes = updateData.sizes;
         return existing;
     }
 
