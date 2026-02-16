@@ -1,5 +1,6 @@
 package org.acme.resource;
 
+import io.quarkus.cache.CacheName;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -31,6 +32,8 @@ import org.acme.service.ColorService;
 @Tag(name = "Colors", description = "Color management endpoints")
 @RunOnVirtualThread
 public class ColorResource {
+
+
     @Inject
     ColorService colorService;
 

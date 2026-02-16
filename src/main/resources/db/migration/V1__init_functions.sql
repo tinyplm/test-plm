@@ -12,15 +12,15 @@ BEGIN
     audit_table_name := TG_TABLE_NAME || '_audit';
     
     IF (TG_OP = 'DELETE') THEN
-        EXECUTE format('INSERT INTO %I (operation, old_data, changed_at) VALUES ($1, $2, NOW())', audit_table_name)
+        EXECUTE format('INSERT INTO %I (operation, old_data, changed_at) VALUES ($1, $2, LOCALTIMESTAMP)', audit_table_name)
         USING 'DELETE', row_to_json(OLD)::jsonb;
         RETURN OLD;
     ELSIF (TG_OP = 'UPDATE') THEN
-        EXECUTE format('INSERT INTO %I (operation, old_data, new_data, changed_at) VALUES ($1, $2, $3, NOW())', audit_table_name)
+        EXECUTE format('INSERT INTO %I (operation, old_data, new_data, changed_at) VALUES ($1, $2, $3, LOCALTIMESTAMP)', audit_table_name)
         USING 'UPDATE', row_to_json(OLD)::jsonb, row_to_json(NEW)::jsonb;
         RETURN NEW;
     ELSIF (TG_OP = 'INSERT') THEN
-        EXECUTE format('INSERT INTO %I (operation, new_data, changed_at) VALUES ($1, $2, NOW())', audit_table_name)
+        EXECUTE format('INSERT INTO %I (operation, new_data, changed_at) VALUES ($1, $2, LOCALTIMESTAMP)', audit_table_name)
         USING 'INSERT', row_to_json(NEW)::jsonb;
         RETURN NEW;
     END IF;
