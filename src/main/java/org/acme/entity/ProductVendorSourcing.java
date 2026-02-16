@@ -3,28 +3,17 @@ package org.acme.entity;
 import io.quarkus.hibernate.panache.PanacheEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import java.time.LocalDateTime;
-import java.util.UUID;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.annotations.UuidGenerator;
 
 @Entity
 @Table(
         name = "product_vendor_sourcing",
         uniqueConstraints = @UniqueConstraint(columnNames = {"product_id", "vendor_id"})
 )
-public class ProductVendorSourcing implements PanacheEntity.Managed {
-    @Id
-    @GeneratedValue
-    @UuidGenerator(style = UuidGenerator.Style.TIME)
-    public UUID id;
+public class ProductVendorSourcing extends CoreEntity implements PanacheEntity.Managed {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "product_id", nullable = false)
@@ -59,15 +48,4 @@ public class ProductVendorSourcing implements PanacheEntity.Managed {
 
     @Column(name = "contact_phone")
     public String contactPhone;
-
-    @Column(name = "created_by")
-    public String createdBy;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    public LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    public LocalDateTime updatedAt;
 }
