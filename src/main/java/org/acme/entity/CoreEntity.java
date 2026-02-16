@@ -9,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 @MappedSuperclass
+@EntityListeners(AuditListener.class)
 public abstract class CoreEntity extends PanacheEntityBase {
 
     @Id

@@ -6,8 +6,8 @@
 CREATE TABLE line (
     id UUID PRIMARY KEY,
     version BIGINT NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     
@@ -17,8 +17,8 @@ CREATE TABLE line (
     brand_id UUID NOT NULL,
     market_id UUID NOT NULL,
     channel_id UUID NOT NULL,
-    start_date TIMESTAMPTZ,
-    end_date TIMESTAMPTZ,
+    start_date TIMESTAMP,
+    end_date TIMESTAMP,
     planned_style_count INTEGER,
     planned_units INTEGER,
     planned_revenue NUMERIC(19, 2)
@@ -30,7 +30,7 @@ CREATE TABLE line_audit (
     operation TEXT NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
     old_data JSONB,
     new_data JSONB,
-    changed_at TIMESTAMPTZ DEFAULT NOW()
+    changed_at TIMESTAMP DEFAULT LOCALTIMESTAMP
 );
 CREATE TRIGGER trg_line_audit AFTER INSERT OR UPDATE OR DELETE ON line FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
 
@@ -39,8 +39,8 @@ CREATE TRIGGER trg_line_audit AFTER INSERT OR UPDATE OR DELETE ON line FOR EACH 
 CREATE TABLE size (
     id UUID PRIMARY KEY,
     version BIGINT NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     
@@ -53,7 +53,7 @@ CREATE TABLE size_audit (
     operation TEXT NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
     old_data JSONB,
     new_data JSONB,
-    changed_at TIMESTAMPTZ DEFAULT NOW()
+    changed_at TIMESTAMP DEFAULT LOCALTIMESTAMP
 );
 CREATE TRIGGER trg_size_audit AFTER INSERT OR UPDATE OR DELETE ON size FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
 
@@ -62,8 +62,8 @@ CREATE TRIGGER trg_size_audit AFTER INSERT OR UPDATE OR DELETE ON size FOR EACH 
 CREATE TABLE color (
     id UUID PRIMARY KEY,
     version BIGINT NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     
@@ -77,7 +77,7 @@ CREATE TABLE color_audit (
     operation TEXT NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
     old_data JSONB,
     new_data JSONB,
-    changed_at TIMESTAMPTZ DEFAULT NOW()
+    changed_at TIMESTAMP DEFAULT LOCALTIMESTAMP
 );
 CREATE TRIGGER trg_color_audit AFTER INSERT OR UPDATE OR DELETE ON color FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
 
@@ -86,8 +86,8 @@ CREATE TRIGGER trg_color_audit AFTER INSERT OR UPDATE OR DELETE ON color FOR EAC
 CREATE TABLE vendor (
     id UUID PRIMARY KEY,
     version BIGINT NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     
@@ -106,7 +106,7 @@ CREATE TABLE vendor_audit (
     operation TEXT NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
     old_data JSONB,
     new_data JSONB,
-    changed_at TIMESTAMPTZ DEFAULT NOW()
+    changed_at TIMESTAMP DEFAULT LOCALTIMESTAMP
 );
 CREATE TRIGGER trg_vendor_audit AFTER INSERT OR UPDATE OR DELETE ON vendor FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
 
@@ -115,8 +115,8 @@ CREATE TRIGGER trg_vendor_audit AFTER INSERT OR UPDATE OR DELETE ON vendor FOR E
 CREATE TABLE product (
     id UUID PRIMARY KEY,
     version BIGINT NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     
@@ -143,7 +143,7 @@ CREATE TABLE product_audit (
     operation TEXT NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
     old_data JSONB,
     new_data JSONB,
-    changed_at TIMESTAMPTZ DEFAULT NOW()
+    changed_at TIMESTAMP DEFAULT LOCALTIMESTAMP
 );
 CREATE TRIGGER trg_product_audit AFTER INSERT OR UPDATE OR DELETE ON product FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
 
@@ -152,8 +152,8 @@ CREATE TRIGGER trg_product_audit AFTER INSERT OR UPDATE OR DELETE ON product FOR
 CREATE TABLE product_vendor_sourcing (
     id UUID PRIMARY KEY,
     version BIGINT NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     
@@ -178,7 +178,7 @@ CREATE TABLE product_vendor_sourcing_audit (
     operation TEXT NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
     old_data JSONB,
     new_data JSONB,
-    changed_at TIMESTAMPTZ DEFAULT NOW()
+    changed_at TIMESTAMP DEFAULT LOCALTIMESTAMP
 );
 CREATE TRIGGER trg_product_vendor_sourcing_audit AFTER INSERT OR UPDATE OR DELETE ON product_vendor_sourcing FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
 
@@ -187,8 +187,8 @@ CREATE TRIGGER trg_product_vendor_sourcing_audit AFTER INSERT OR UPDATE OR DELET
 CREATE TABLE vendor_quote (
     id UUID PRIMARY KEY,
     version BIGINT NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     
@@ -217,12 +217,12 @@ CREATE TABLE vendor_quote (
     sustainability_notes VARCHAR(1000),
     status VARCHAR(30) NOT NULL,
     submitted_by VARCHAR(255),
-    submitted_at TIMESTAMPTZ,
+    submitted_at TIMESTAMP,
     reviewed_by VARCHAR(255),
-    reviewed_at TIMESTAMPTZ,
+    reviewed_at TIMESTAMP,
     approval_comment VARCHAR(1000),
     deleted BOOLEAN NOT NULL DEFAULT FALSE,
-    deleted_at TIMESTAMPTZ,
+    deleted_at TIMESTAMP,
     deleted_by VARCHAR(255),
     
     CONSTRAINT uq_vendor_quote_version UNIQUE (product_vendor_sourcing_id, quote_number, version_number)
@@ -234,6 +234,6 @@ CREATE TABLE vendor_quote_audit (
     operation TEXT NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
     old_data JSONB,
     new_data JSONB,
-    changed_at TIMESTAMPTZ DEFAULT NOW()
+    changed_at TIMESTAMP DEFAULT LOCALTIMESTAMP
 );
 CREATE TRIGGER trg_vendor_quote_audit AFTER INSERT OR UPDATE OR DELETE ON vendor_quote FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
