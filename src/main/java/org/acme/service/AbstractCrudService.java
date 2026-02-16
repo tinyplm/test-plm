@@ -14,7 +14,6 @@ import java.util.function.Supplier;
 
 import org.acme.util.PageResult;
 import org.acme.util.Paging;
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import org.hibernate.query.SelectionQuery;
 
 public abstract class AbstractCrudService<E extends CoreEntity> {

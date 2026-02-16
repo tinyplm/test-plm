@@ -1,6 +1,7 @@
 package org.acme.resource;
 
 import jakarta.inject.Inject;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -21,8 +22,11 @@ import io.smallrye.common.annotation.RunOnVirtualThread;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.acme.dto.SizeDTO;
 import org.acme.entity.Size;
+import org.acme.mapper.SizeMapper;
 import org.acme.service.SizeService;
+import org.jboss.logging.Logger;
 
 @Path("/sizes")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -30,14 +34,22 @@ import org.acme.service.SizeService;
 @Tag(name = "Sizes", description = "Size management endpoints")
 @RunOnVirtualThread
 public class SizeResource {
+    
+    private static final Logger LOG = Logger.getLogger(SizeResource.class);
+
     @Inject
     SizeService sizeService;
+
+    @Inject
+    SizeMapper sizeMapper;
 
     @GET
     @Operation(summary = "List sizes")
     @APIResponse(responseCode = "200", description = "Sizes list")
-    public List<Size> list() {
-        return sizeService.list();
+    public List<SizeDTO.Response> list() {
+        return sizeService.list().stream()
+                .map(sizeMapper::toResponse)
+                .toList();
     }
 
     @GET
@@ -50,22 +62,23 @@ public class SizeResource {
         if (size == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        return Response.ok(size).build();
+        return Response.ok(sizeMapper.toResponse(size)).build();
     }
 
     @POST
     @Operation(summary = "Create a size")
     @APIResponse(responseCode = "201", description = "Size created")
     @APIResponse(responseCode = "400", description = "Invalid size payload")
-    public Response create(@Valid Size size, @Context UriInfo uriInfo) {
+    public Response create(@Valid SizeDTO.Create request, @Context UriInfo uriInfo) {
+        LOG.infof("Creating size: %s", request.name());
         Size created;
         try {
-            created = sizeService.create(size);
+            created = sizeService.create(sizeMapper.toEntity(request));
         } catch (IllegalArgumentException exception) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(exception.getMessage()).build();
         }
         URI location = uriInfo.getAbsolutePathBuilder().path(created.id.toString()).build();
-        return Response.created(location).entity(created).build();
+        return Response.created(location).entity(sizeMapper.toResponse(created)).build();
     }
 
     @PUT
@@ -74,17 +87,25 @@ public class SizeResource {
     @APIResponse(responseCode = "200", description = "Size updated")
     @APIResponse(responseCode = "400", description = "Invalid size payload")
     @APIResponse(responseCode = "404", description = "Size not found")
-    public Response update(@PathParam("id") UUID id, @Valid Size size) {
+    @APIResponse(responseCode = "409", description = "Optimistic lock failure (version mismatch)")
+    public Response update(@PathParam("id") UUID id, @Valid SizeDTO.Update request) {
+        LOG.infof("Updating size with id: %s", id);
         Size updated;
         try {
-            updated = sizeService.update(id, size);
+            Size updateData = new Size();
+            sizeMapper.updateEntity(updateData, request);
+            
+            updated = sizeService.update(id, updateData, request.version());
         } catch (IllegalArgumentException exception) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(exception.getMessage()).build();
+        } catch (OptimisticLockException e) {
+            return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
         }
+        
         if (updated == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        return Response.ok(updated).build();
+        return Response.ok(sizeMapper.toResponse(updated)).build();
     }
 
     @DELETE
@@ -93,6 +114,7 @@ public class SizeResource {
     @APIResponse(responseCode = "204", description = "Size deleted")
     @APIResponse(responseCode = "404", description = "Size not found")
     public Response delete(@PathParam("id") UUID id) {
+        LOG.infof("Deleting size with id: %s", id);
         boolean deleted = sizeService.delete(id);
         if (!deleted) {
             return Response.status(Response.Status.NOT_FOUND).build();

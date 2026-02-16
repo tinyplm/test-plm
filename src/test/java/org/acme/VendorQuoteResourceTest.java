@@ -46,6 +46,7 @@ class VendorQuoteResourceTest {
                 .body("size()", equalTo(1));
 
         Map<String, Object> updatePayload = quotePayload("Q-100", 1, new BigDecimal("12.3400"), LocalDate.now().plusDays(30));
+        updatePayload.put("version", 0);
 
         given()
                 .contentType(ContentType.JSON)
@@ -72,6 +73,13 @@ class VendorQuoteResourceTest {
                 .then()
                 .statusCode(200)
                 .body("status", equalTo("APPROVED"));
+
+        // Fetch current version to bypass optimistic lock check and verifying business rule
+        int currentVersion = given()
+            .when().get("/products/{productId}/vendors/{linkId}/quotes/{quoteId}", productId, linkId, quoteId)
+            .then().statusCode(200).extract().path("version");
+
+        updatePayload.put("version", currentVersion);
 
         given()
                 .contentType(ContentType.JSON)
@@ -280,7 +288,7 @@ class VendorQuoteResourceTest {
         payload.put("description", "Quote test product");
         payload.put("price", new BigDecimal("20.00"));
         payload.put("quantity", 300);
-        payload.put("line", Map.of("id", lineId));
+        payload.put("lineId", lineId);
 
         Response response = given()
                 .contentType(ContentType.JSON)

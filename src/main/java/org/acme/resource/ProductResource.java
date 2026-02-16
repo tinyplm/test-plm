@@ -1,6 +1,8 @@
 package org.acme.resource;
 
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.inject.Inject;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -18,12 +20,14 @@ import java.net.URI;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
-import io.smallrye.common.annotation.RunOnVirtualThread;
-import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.acme.dto.ProductDTO;
 import org.acme.entity.Product;
+import org.acme.mapper.ProductMapper;
 import org.acme.service.ProductService;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.jboss.logging.Logger;
 
 @Path("/products")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -31,14 +35,22 @@ import org.acme.service.ProductService;
 @Tag(name = "Products", description = "Product management endpoints")
 @RunOnVirtualThread
 public class ProductResource {
+    
+    private static final Logger LOG = Logger.getLogger(ProductResource.class);
+
     @Inject
     ProductService productService;
+
+    @Inject
+    ProductMapper productMapper;
 
     @GET
     @Operation(summary = "List products")
     @APIResponse(responseCode = "200", description = "Products list")
-    public List<Product> list() {
-        return productService.list();
+    public List<ProductDTO.Response> list() {
+        return productService.list().stream()
+                .map(productMapper::toResponse)
+                .toList();
     }
 
     @GET
@@ -51,22 +63,23 @@ public class ProductResource {
         if (product == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        return Response.ok(product).build();
+        return Response.ok(productMapper.toResponse(product)).build();
     }
 
     @POST
     @Operation(summary = "Create a product")
     @APIResponse(responseCode = "201", description = "Product created")
     @APIResponse(responseCode = "400", description = "Invalid product payload")
-    public Response create(@Valid Product product, @Context UriInfo uriInfo) {
+    public Response create(@Valid ProductDTO.Create request, @Context UriInfo uriInfo) {
+        LOG.infof("Creating product: %s", request.name());
         Product created;
         try {
-            created = productService.create(product);
+            created = productService.create(productMapper.toEntity(request));
         } catch (IllegalArgumentException exception) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(exception.getMessage()).build();
         }
         URI location = uriInfo.getAbsolutePathBuilder().path(created.id.toString()).build();
-        return Response.created(location).entity(created).build();
+        return Response.created(location).entity(productMapper.toResponse(created)).build();
     }
 
     @PUT
@@ -75,17 +88,25 @@ public class ProductResource {
     @APIResponse(responseCode = "200", description = "Product updated")
     @APIResponse(responseCode = "400", description = "Invalid product payload")
     @APIResponse(responseCode = "404", description = "Product not found")
-    public Response update(@PathParam("id") UUID id, @Valid Product product) {
+    @APIResponse(responseCode = "409", description = "Optimistic lock failure (version mismatch)")
+    public Response update(@PathParam("id") UUID id, @Valid ProductDTO.Update request) {
+        LOG.infof("Updating product with id: %s", id);
         Product updated;
         try {
-            updated = productService.update(id, product);
+            Product updateData = new Product();
+            productMapper.updateEntity(updateData, request);
+            
+            updated = productService.update(id, updateData, request.version());
         } catch (IllegalArgumentException exception) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(exception.getMessage()).build();
+        } catch (OptimisticLockException e) {
+            return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
         }
+        
         if (updated == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        return Response.ok(updated).build();
+        return Response.ok(productMapper.toResponse(updated)).build();
     }
 
     @DELETE
@@ -94,6 +115,7 @@ public class ProductResource {
     @APIResponse(responseCode = "204", description = "Product deleted")
     @APIResponse(responseCode = "404", description = "Product not found")
     public Response delete(@PathParam("id") UUID id) {
+        LOG.infof("Deleting product with id: %s", id);
         boolean deleted = productService.delete(id);
         if (!deleted) {
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -109,11 +131,12 @@ public class ProductResource {
     @APIResponse(responseCode = "400", description = "Invalid image payload or image already exists")
     @APIResponse(responseCode = "404", description = "Product not found")
     public Response addImage(@PathParam("id") UUID id, byte[] imageBytes) {
+        LOG.infof("Adding image to product with id: %s", id);
         try {
             Product product = productService.addImage(id, imageBytes);
-            return Response.ok(product).build();
+            return Response.ok(productMapper.toResponse(product)).build();
         } catch (IllegalArgumentException exception) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(exception.getMessage()).build();
         } catch (NoSuchElementException exception) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
@@ -127,11 +150,12 @@ public class ProductResource {
     @APIResponse(responseCode = "400", description = "Invalid image payload")
     @APIResponse(responseCode = "404", description = "Product not found")
     public Response updateImage(@PathParam("id") UUID id, byte[] imageBytes) {
+        LOG.infof("Updating image for product with id: %s", id);
         try {
             Product product = productService.updateImage(id, imageBytes);
-            return Response.ok(product).build();
+            return Response.ok(productMapper.toResponse(product)).build();
         } catch (IllegalArgumentException exception) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(exception.getMessage()).build();
         } catch (NoSuchElementException exception) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
@@ -143,6 +167,7 @@ public class ProductResource {
     @APIResponse(responseCode = "204", description = "Product image removed")
     @APIResponse(responseCode = "404", description = "Product or image not found")
     public Response removeImage(@PathParam("id") UUID id) {
+        LOG.infof("Removing image from product with id: %s", id);
         try {
             boolean removed = productService.removeImage(id);
             if (!removed) {

@@ -33,66 +33,59 @@ public class ProductVendorSourcingService {
     }
 
     @Transactional
-    public ProductVendorSourcing create(UUID productId, ProductVendorSourcingCommand command) {
+    public ProductVendorSourcing create(UUID productId, ProductVendorSourcing link) {
         Product product = getProductOrThrow(productId);
-        validateCommand(command);
-
-        if (productVendorSourcingRepository.findByProductIdAndVendorId(productId, command.vendorId()) != null) {
+        if (link.vendor == null || link.vendor.id == null) {
+            throw new IllegalArgumentException("Vendor is required.");
+        }
+        Vendor vendor = getVendorOrThrow(link.vendor.id);
+        
+        if (productVendorSourcingRepository.findByProductIdAndVendorId(productId, vendor.id) != null) {
             throw new IllegalArgumentException("Vendor is already linked to this product.");
         }
-        if (command.primaryVendor()) {
+        if (link.primaryVendor) {
             ensureNoOtherPrimary(productId, null);
         }
 
-        Vendor vendor = getVendorOrThrow(command.vendorId());
-        ProductVendorSourcing link = new ProductVendorSourcing();
-        applyCommand(link, product, vendor, command);
+        link.product = product;
+        link.vendor = vendor;
         productVendorSourcingRepository.persist(link);
         return link;
     }
 
     @Transactional
-    public List<ProductVendorSourcing> replaceAll(UUID productId, List<ProductVendorSourcingCommand> commands) {
-        Product product = getProductOrThrow(productId);
-        if (commands == null) {
-            throw new IllegalArgumentException("Vendor links payload is required.");
-        }
-        validateBatch(commands);
-
-        for (ProductVendorSourcing existing : productVendorSourcingRepository.listByProductId(productId)) {
-            productVendorSourcingRepository.delete(existing);
-        }
-
-        for (ProductVendorSourcingCommand command : commands) {
-            Vendor vendor = getVendorOrThrow(command.vendorId());
-            ProductVendorSourcing link = new ProductVendorSourcing();
-            applyCommand(link, product, vendor, command);
-            productVendorSourcingRepository.persist(link);
-        }
-
-        return productVendorSourcingRepository.listByProductId(productId);
-    }
-
-    @Transactional
-    public ProductVendorSourcing update(UUID productId, UUID linkId, ProductVendorSourcingCommand command) {
-        validateCommand(command);
-
+    public ProductVendorSourcing update(UUID productId, UUID linkId, ProductVendorSourcing updateData, long version) {
         ProductVendorSourcing existing = productVendorSourcingRepository.findByProductIdAndId(productId, linkId);
         if (existing == null) {
             throw new NoSuchElementException("Product vendor link not found.");
         }
-
-        ProductVendorSourcing duplicate = productVendorSourcingRepository.findByProductIdAndVendorId(productId, command.vendorId());
-        if (duplicate != null && !duplicate.id.equals(linkId)) {
-            throw new IllegalArgumentException("Vendor is already linked to this product.");
+        
+        if (existing.version != version) {
+            throw new jakarta.persistence.OptimisticLockException("Version mismatch. Expected " + version + " but found " + existing.version);
         }
 
-        if (command.primaryVendor()) {
+        // Check for duplicate vendor if vendor changed (though typically vendor ID shouldn't change in update)
+        // Assuming vendor ID is not updatable in this context, or if it is:
+        /*
+        if (updateData.vendor != null && !updateData.vendor.id.equals(existing.vendor.id)) {
+             // check duplicate
+        }
+        */
+
+        if (updateData.primaryVendor) {
             ensureNoOtherPrimary(productId, linkId);
         }
 
-        Vendor vendor = getVendorOrThrow(command.vendorId());
-        applyCommand(existing, existing.product, vendor, command);
+        existing.primaryVendor = updateData.primaryVendor;
+        existing.vsn = updateData.vsn;
+        existing.factoryName = updateData.factoryName;
+        existing.factoryCode = updateData.factoryCode;
+        existing.factoryCountry = updateData.factoryCountry;
+        existing.sustainable = updateData.sustainable;
+        existing.contactName = updateData.contactName;
+        existing.contactEmail = updateData.contactEmail;
+        existing.contactPhone = updateData.contactPhone;
+        
         return existing;
     }
 
@@ -104,34 +97,6 @@ public class ProductVendorSourcingService {
         }
         productVendorSourcingRepository.delete(existing);
         return true;
-    }
-
-    private void validateBatch(List<ProductVendorSourcingCommand> commands) {
-        Set<UUID> vendorIds = new HashSet<>();
-        int primaryCount = 0;
-
-        for (ProductVendorSourcingCommand command : commands) {
-            validateCommand(command);
-            if (!vendorIds.add(command.vendorId())) {
-                throw new IllegalArgumentException("Duplicate vendor in payload.");
-            }
-            if (command.primaryVendor()) {
-                primaryCount++;
-            }
-        }
-
-        if (primaryCount > 1) {
-            throw new IllegalArgumentException("Only one primary vendor is allowed per product.");
-        }
-    }
-
-    private void validateCommand(ProductVendorSourcingCommand command) {
-        if (command == null) {
-            throw new IllegalArgumentException("Vendor link payload is required.");
-        }
-        if (command.vendorId() == null) {
-            throw new IllegalArgumentException("Vendor id is required.");
-        }
     }
 
     private void ensureNoOtherPrimary(UUID productId, UUID currentLinkId) {
@@ -155,25 +120,5 @@ public class ProductVendorSourcingService {
             throw new NoSuchElementException("Vendor not found.");
         }
         return vendor;
-    }
-
-    private void applyCommand(
-            ProductVendorSourcing target,
-            Product product,
-            Vendor vendor,
-            ProductVendorSourcingCommand command
-    ) {
-        target.product = product;
-        target.vendor = vendor;
-        target.primaryVendor = command.primaryVendor();
-        target.vsn = command.vsn();
-        target.factoryName = command.factoryName();
-        target.factoryCode = command.factoryCode();
-        target.factoryCountry = command.factoryCountry();
-        target.sustainable = command.sustainable();
-        target.contactName = command.contactName();
-        target.contactEmail = command.contactEmail();
-        target.contactPhone = command.contactPhone();
-        target.createdBy = command.createdBy();
     }
 }

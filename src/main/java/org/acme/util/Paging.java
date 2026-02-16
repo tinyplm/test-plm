@@ -1,10 +1,8 @@
 package org.acme.util;
 
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.LongSupplier;
 
-import org.hibernate.query.SelectionQuery;
+import io.quarkus.hibernate.panache.PanacheQuery;
 
 public final class Paging {
 
@@ -14,63 +12,22 @@ public final class Paging {
 
     private Paging() {}
 
-    // ------------------------------------------------
-    // Entity paging
-    // ------------------------------------------------
     public static <E> PageResult<E> page(
-            SelectionQuery<E> query,
-            LongSupplier countSupplier,
+            PanacheQuery<E, ?, ?, ?> query,
             Integer page,
             Integer size) {
 
         int p = normalizePage(page);
         int s = normalizeSize(size);
 
-        query.setFirstResult(p * s);
-        query.setMaxResults(s);
+        query.page(p, s);
 
-        List<E> items = query.getResultList();
-        long total = countSupplier.getAsLong();
+        var items = query.list();   // ← IMPORTANT
+        long total = (long) query.count();
 
-        int totalPages =
-                (int) Math.ceil((double) total / s);
-
-        return new PageResult<>(
-                items,
-                p,
-                s,
-                total,
-                totalPages
-        );
+        return PageResult.of((List) items, p, s, total);
     }
 
-    // ------------------------------------------------
-    // Entity → DTO paging
-    // ------------------------------------------------
-    public static <E, D> PageResult<D> page(
-            SelectionQuery<E> query,
-            LongSupplier countSupplier,
-            Integer page,
-            Integer size,
-            Function<E, D> mapper) {
-
-        PageResult<E> result =
-                page(query, countSupplier, page, size);
-
-        List<D> mapped =
-                result.items()
-                        .stream()
-                        .map(mapper)
-                        .toList();
-
-        return new PageResult<>(
-                mapped,
-                result.page(),
-                result.size(),
-                result.totalElements(),
-                result.totalPages()
-        );
-    }
 
     private static int normalizePage(Integer page) {
         return (page == null || page < 0) ? DEFAULT_PAGE : page;

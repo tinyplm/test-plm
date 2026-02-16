@@ -6,19 +6,20 @@ public record PageResult<T>(
         List<T> items,
         int page,
         int size,
-        long totalElements,
-        int totalPages
-) {
+        long totalElements) {
 
     public static <T> PageResult<T> of(
-            List<T> items,
+            List items,
             int page,
             int size,
-            long total,
-            int pages) {
+            long total) {
 
-        return new PageResult<>(items, page, size, total, pages);
+        return new PageResult<>(
+                List.copyOf(items),
+                page,
+                size,
+                total
+        );
     }
 }
-
 

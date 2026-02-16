@@ -2,13 +2,14 @@ package org.acme.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.Id;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
+
+import java.util.List;
 import java.util.UUID;
-import org.acme.util.PageResult;
 import org.acme.entity.Color;
 import org.acme.repository.ColorRepository;
-import org.acme.util.Paging;
 
 @ApplicationScoped
 public class ColorService {
@@ -16,14 +17,8 @@ public class ColorService {
     @Inject
     ColorRepository colorRepository;
 
-    public PageResult<Color> list(Integer page, Integer size) {
-
-        return Paging.page(
-                colorRepository.findAllQuery(),
-                colorRepository::count,
-                page,
-                size
-        );
+    public java.util.List<Color> list() {
+        return colorRepository.listAll();
     }
 
     public Color findById(UUID id) {
@@ -32,6 +27,7 @@ public class ColorService {
 
     @Transactional
     public Color create(Color color) {
+
         if (color == null || color.name == null || color.name.isBlank()) {
             throw new IllegalArgumentException("Color name is required.");
         }

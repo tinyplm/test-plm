@@ -5,10 +5,10 @@ import jakarta.inject.Inject;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 import java.util.UUID;
+
+import org.acme.entity.Color;
 import org.acme.entity.Line;
 import org.acme.repository.LineRepository;
-import org.acme.util.PageResult;
-import org.acme.util.Paging;
 
 @ApplicationScoped
 public class LineService {
@@ -16,14 +16,8 @@ public class LineService {
     @Inject
     LineRepository lineRepository;
 
-    public PageResult<Line> list(Integer page, Integer size) {
-        return Paging.page(
-            lineRepository.findAllQuery(),
-            lineRepository::count,
-            page,
-            size
-        );
-
+    public java.util.List<Line> list() {
+        return lineRepository.listAll();
     }
 
     public Line findById(UUID id) {

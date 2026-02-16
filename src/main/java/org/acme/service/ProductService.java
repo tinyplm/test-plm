@@ -45,9 +45,6 @@ public class ProductService {
 
     @Transactional
     public Product create(Product product) {
-        if (product == null || product.name == null || product.name.isBlank()) {
-            throw new IllegalArgumentException("Product name is required.");
-        }
         if (product.line == null || product.line.id == null) {
             throw new IllegalArgumentException("Product line is required.");
         }
@@ -63,23 +60,23 @@ public class ProductService {
     }
 
     @Transactional
-    public Product update(UUID id, Product product) {
+    public Product update(UUID id, Product product, long version) {
         if (product == null) {
             throw new IllegalArgumentException("Product payload is required.");
-        }
-        if (product.line == null || product.line.id == null) {
-            throw new IllegalArgumentException("Product line is required.");
         }
         Product existing = productRepository.findById(id);
         if (existing == null) {
             return null;
         }
-        Line line = lineRepository.findById(product.line.id);
-        if (line == null) {
-            throw new IllegalArgumentException("Product line is invalid.");
+        if (existing.version != version) {
+            throw new jakarta.persistence.OptimisticLockException("Version mismatch. Expected " + version + " but found " + existing.version);
         }
+        
+        if (product.line != null) {
+             existing.line = product.line;
+        }
+
         existing.name = product.name;
-        existing.line = line;
         existing.description = product.description;
         existing.lifecycle = product.lifecycle;
         existing.assortment = product.assortment;

@@ -33,23 +33,25 @@ public class VendorService {
     }
 
     @Transactional
-    public Vendor update(UUID id, Vendor vendor) {
-        if (vendor == null) {
+    public Vendor update(UUID id, Vendor updateData, long version) {
+        if (updateData == null) {
             throw new IllegalArgumentException("Vendor payload is required.");
         }
         Vendor existing = vendorRepository.findById(id);
         if (existing == null) {
             return null;
         }
-        existing.name = vendor.name;
-        existing.type = vendor.type;
-        existing.supplierName = vendor.supplierName;
-        existing.supplierId = vendor.supplierId;
-        existing.supplierNumber = vendor.supplierNumber;
-        existing.vendorGroup = vendor.vendorGroup;
-        existing.agreementStatus = vendor.agreementStatus;
-        existing.status = vendor.status;
-        existing.createdBy = vendor.createdBy;
+        if (existing.version != version) {
+             throw new jakarta.persistence.OptimisticLockException("Version mismatch. Expected " + version + " but found " + existing.version);
+        }
+        existing.name = updateData.name;
+        existing.type = updateData.type;
+        existing.supplierName = updateData.supplierName;
+        existing.supplierId = updateData.supplierId;
+        existing.supplierNumber = updateData.supplierNumber;
+        existing.vendorGroup = updateData.vendorGroup;
+        existing.agreementStatus = updateData.agreementStatus;
+        existing.status = updateData.status;
         return existing;
     }
 

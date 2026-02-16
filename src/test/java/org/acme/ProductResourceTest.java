@@ -42,7 +42,7 @@ class ProductResourceTest {
         payload.put("inspiration", "Street utility trend board.");
         payload.put("price", new BigDecimal("12.34"));
         payload.put("quantity", 5);
-        payload.put("line", Map.of("id", lineId));
+        payload.put("lineId", lineId);
 
         Response createResponse = given()
                 .contentType(ContentType.JSON)
@@ -98,7 +98,8 @@ class ProductResourceTest {
         updatePayload.put("inspiration", "Performance outdoor capsule.");
         updatePayload.put("price", new BigDecimal("99.99"));
         updatePayload.put("quantity", 42);
-        updatePayload.put("line", Map.of("id", lineId));
+        updatePayload.put("lineId", lineId);
+        updatePayload.put("version", 0);
 
         given()
                 .contentType(ContentType.JSON)
@@ -118,7 +119,8 @@ class ProductResourceTest {
                 .body("setWeek", equalTo(42))
                 .body("inspiration", equalTo("Performance outdoor capsule."))
                 .body("imageUrl", nullValue())
-                .body("quantity", equalTo(42));
+                .body("quantity", equalTo(42))
+                .body("version", equalTo(1));
 
         given()
                 .when().delete("/products/{id}", id)
@@ -129,6 +131,38 @@ class ProductResourceTest {
                 .when().get("/products/{id}", id)
                 .then()
                 .statusCode(404);
+    }
+    
+    @Test
+    void optimisticLocking() {
+        String lineId = createLine();
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("name", "Lock Test");
+        payload.put("lineId", lineId);
+
+        Response createResponse = given()
+                .contentType(ContentType.JSON)
+                .body(payload)
+                .when().post("/products")
+                .then()
+                .statusCode(201)
+                .extract().response();
+
+        String id = createResponse.jsonPath().getString("id");
+
+        Map<String, Object> updatePayload = new HashMap<>();
+        updatePayload.put("name", "Should Fail");
+        updatePayload.put("lineId", lineId);
+        updatePayload.put("version", 999);
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(updatePayload)
+                .when().put("/products/{id}", id)
+                .then()
+                .statusCode(409);
+        
+        given().when().delete("/products/{id}", id).then().statusCode(204);
     }
 
     @Test
@@ -144,7 +178,8 @@ class ProductResourceTest {
         updatePayload.put("name", "Does Not Exist");
         updatePayload.put("price", new BigDecimal("1.23"));
         updatePayload.put("quantity", 1);
-        updatePayload.put("line", Map.of("id", createLine()));
+        updatePayload.put("lineId", createLine());
+        updatePayload.put("version", 0);
 
         given()
                 .contentType(ContentType.JSON)

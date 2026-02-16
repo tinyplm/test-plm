@@ -6,18 +6,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 @Entity
 public class Product extends CoreEntity implements PanacheEntity.Managed {
 
-    @NotBlank
     @Column(nullable = false)
     public String name;
 
-    @NotNull
     @ManyToOne(optional = false)
     @JoinColumn(name = "line_id", nullable = false)
     public Line line;
