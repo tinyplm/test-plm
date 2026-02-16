@@ -123,6 +123,9 @@ public class ColorDTO {
     *   Handle **Optimistic Locking**: Check `existing.version != request.version` in `update`.
     *   Return Entities (or Pages of Entities) to the Resource layer.
 4.  **Pagination:** Use `Paging.page()` helper.
+5. Only Service layer may start transactions.
+6. Repositories MUST be transaction-agnostic.
+7. Resources MUST NOT be transactional.
 
 ```java
 @Transactional
