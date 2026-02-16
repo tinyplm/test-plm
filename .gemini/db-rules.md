@@ -143,12 +143,6 @@ Indexes are required for:
 
 - foreign keys
 - frequently filtered columns
-- soft delete filtering
-
-Soft delete index:
-
-CREATE INDEX idx_<table>_deleted
-ON <table>(deleted);
 
 ------------------------------------------------------------
 
