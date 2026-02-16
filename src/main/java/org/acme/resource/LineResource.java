@@ -1,27 +1,30 @@
 package org.acme.resource;
 
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.inject.Inject;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
-import io.smallrye.common.annotation.RunOnVirtualThread;
+import org.acme.dto.LineDTO;
 import org.acme.entity.Line;
-import org.acme.entity.Product;
+import org.acme.mapper.LineMapper;
 import org.acme.service.LineService;
-import org.acme.service.ProductService;
+import org.acme.util.PageResult;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -32,17 +35,29 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Tag(name = "Lines", description = "Line management endpoints")
 @RunOnVirtualThread
 public class LineResource {
+
     @Inject
     LineService lineService;
 
     @Inject
-    ProductService productService;
+    LineMapper lineMapper;
 
     @GET
-    @Operation(summary = "List lines")
-    @APIResponse(responseCode = "200", description = "Lines list")
-    public List<Line> list() {
-        return lineService.list();
+    @Operation(summary = "List lines (paged)")
+    @APIResponse(responseCode = "200", description = "Paged Lines list")
+    public PageResult<LineDTO.Response> list(
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("20") int size
+    ) {
+        if (size > 100) size = 100; // Clamp max size
+        PageResult<Line> result = lineService.list(page, size);
+        return new PageResult<>(
+                result.items().stream().map(lineMapper::toResponse).toList(),
+                result.page(),
+                result.size(),
+                result.totalElements(),
+                result.totalPages()
+        );
     }
 
     @GET
@@ -55,36 +70,22 @@ public class LineResource {
         if (line == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        return Response.ok(line).build();
-    }
-
-    @GET
-    @Path("/{id}/products")
-    @Operation(summary = "List products for a line")
-    @APIResponse(responseCode = "200", description = "Products list")
-    @APIResponse(responseCode = "404", description = "Line not found")
-    public Response listProducts(@PathParam("id") UUID id) {
-        Line line = lineService.findById(id);
-        if (line == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-        List<Product> products = productService.listByLineId(id);
-        return Response.ok(products).build();
+        return Response.ok(lineMapper.toResponse(line)).build();
     }
 
     @POST
     @Operation(summary = "Create a line")
     @APIResponse(responseCode = "201", description = "Line created")
     @APIResponse(responseCode = "400", description = "Invalid line payload")
-    public Response create(@Valid Line line, @Context UriInfo uriInfo) {
+    public Response create(@Valid LineDTO.Create request, @Context UriInfo uriInfo) {
         Line created;
         try {
-            created = lineService.create(line);
+            created = lineService.create(lineMapper.toEntity(request));
         } catch (IllegalArgumentException exception) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(exception.getMessage()).build();
         }
         URI location = uriInfo.getAbsolutePathBuilder().path(created.id.toString()).build();
-        return Response.created(location).entity(created).build();
+        return Response.created(location).entity(lineMapper.toResponse(created)).build();
     }
 
     @PUT
@@ -93,17 +94,24 @@ public class LineResource {
     @APIResponse(responseCode = "200", description = "Line updated")
     @APIResponse(responseCode = "400", description = "Invalid line payload")
     @APIResponse(responseCode = "404", description = "Line not found")
-    public Response update(@PathParam("id") UUID id, @Valid Line line) {
+    @APIResponse(responseCode = "409", description = "Optimistic lock failure (version mismatch)")
+    public Response update(@PathParam("id") UUID id, @Valid LineDTO.Update request) {
         Line updated;
         try {
-            updated = lineService.update(id, line);
+            Line updateData = new Line();
+            lineMapper.updateEntity(updateData, request);
+            
+            updated = lineService.update(id, updateData, request.version());
         } catch (IllegalArgumentException exception) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(exception.getMessage()).build();
+        } catch (OptimisticLockException e) {
+            return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
         }
+        
         if (updated == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        return Response.ok(updated).build();
+        return Response.ok(lineMapper.toResponse(updated)).build();
     }
 
     @DELETE

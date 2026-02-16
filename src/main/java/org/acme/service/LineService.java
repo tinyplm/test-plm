@@ -2,11 +2,13 @@ package org.acme.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
-import java.util.List;
 import java.util.UUID;
 import org.acme.entity.Line;
 import org.acme.repository.LineRepository;
+import org.acme.util.PageResult;
+import org.acme.util.Paging;
 
 @ApplicationScoped
 public class LineService {
@@ -14,8 +16,14 @@ public class LineService {
     @Inject
     LineRepository lineRepository;
 
-    public List<Line> list() {
-        return lineRepository.listAll();
+    public PageResult<Line> list(Integer page, Integer size) {
+        return Paging.page(
+            lineRepository.findAllQuery(),
+            lineRepository::count,
+            page,
+            size
+        );
+
     }
 
     public Line findById(UUID id) {
@@ -27,47 +35,41 @@ public class LineService {
         if (line == null) {
             throw new IllegalArgumentException("Line payload is required.");
         }
+        // Basic validation is handled by DTO constraints, but business logic validation can go here.
         if (line.lineCode == null || line.lineCode.isBlank()) {
             throw new IllegalArgumentException("Line code is required.");
         }
-        if (line.seasonCode == null || line.seasonCode.isBlank()) {
-            throw new IllegalArgumentException("Season code is required.");
-        }
-        if (line.brandId == null) {
-            throw new IllegalArgumentException("Brand id is required.");
-        }
-        if (line.marketId == null) {
-            throw new IllegalArgumentException("Market id is required.");
-        }
-        if (line.channelId == null) {
-            throw new IllegalArgumentException("Channel id is required.");
-        }
+        
         line.id = null;
         lineRepository.persist(line);
         return line;
     }
 
     @Transactional
-    public Line update(UUID id, Line line) {
-        if (line == null) {
+    public Line update(UUID id, Line updateData, long version) {
+        if (updateData == null) {
             throw new IllegalArgumentException("Line payload is required.");
         }
         Line existing = lineRepository.findById(id);
         if (existing == null) {
             return null;
         }
-        existing.lineCode = line.lineCode;
-        existing.seasonCode = line.seasonCode;
-        existing.year = line.year;
-        existing.brandId = line.brandId;
-        existing.marketId = line.marketId;
-        existing.channelId = line.channelId;
-        existing.startDate = line.startDate;
-        existing.endDate = line.endDate;
-        existing.plannedStyleCount = line.plannedStyleCount;
-        existing.plannedUnits = line.plannedUnits;
-        existing.plannedRevenue = line.plannedRevenue;
-        existing.createdBy = line.createdBy;
+        if (existing.version != version) {
+            throw new OptimisticLockException("Version mismatch. Expected " + version + " but found " + existing.version);
+        }
+        
+        existing.lineCode = updateData.lineCode;
+        existing.seasonCode = updateData.seasonCode;
+        existing.year = updateData.year;
+        existing.brandId = updateData.brandId;
+        existing.marketId = updateData.marketId;
+        existing.channelId = updateData.channelId;
+        existing.startDate = updateData.startDate;
+        existing.endDate = updateData.endDate;
+        existing.plannedStyleCount = updateData.plannedStyleCount;
+        existing.plannedUnits = updateData.plannedUnits;
+        existing.plannedRevenue = updateData.plannedRevenue;
+        
         return existing;
     }
 

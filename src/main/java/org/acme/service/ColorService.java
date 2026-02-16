@@ -20,7 +20,7 @@ public class ColorService {
 
         return Paging.page(
                 colorRepository.findAllQuery(),
-                colorRepository::countAll,
+                colorRepository::count,
                 page,
                 size
         );
