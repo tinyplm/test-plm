@@ -1,14 +1,14 @@
 package org.acme.service;
 
-import io.quarkus.cache.CacheInvalidate;
-import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
-import java.util.List;
 import java.util.UUID;
+import org.acme.util.PageResult;
 import org.acme.entity.Color;
 import org.acme.repository.ColorRepository;
+import org.acme.util.Paging;
 
 @ApplicationScoped
 public class ColorService {
@@ -16,12 +16,16 @@ public class ColorService {
     @Inject
     ColorRepository colorRepository;
 
-    @CacheResult(cacheName = "color-cache")
-    public List<Color> list() {
-        return colorRepository.listAll();
+    public PageResult<Color> list(Integer page, Integer size) {
+
+        return Paging.page(
+                colorRepository.findAllQuery(),
+                colorRepository::countAll,
+                page,
+                size
+        );
     }
 
-    @CacheResult(cacheName = "color-cache")
     public Color findById(UUID id) {
         return colorRepository.findById(id);
     }
@@ -40,23 +44,24 @@ public class ColorService {
     }
 
     @Transactional
-    @CacheInvalidate(cacheName = "color-cache")
-    public Color update(UUID id, Color color) {
-        if (color == null) {
+    public Color update(UUID id, Color updateData, long version) {
+        if (updateData == null) {
             throw new IllegalArgumentException("Color payload is required.");
         }
         Color existing = colorRepository.findById(id);
         if (existing == null) {
             return null;
         }
-        existing.name = color.name;
-        existing.description = color.description;
-        existing.rgb = color.rgb;
+        if (existing.version != version) {
+            throw new OptimisticLockException("Version mismatch. Expected " + version + " but found " + existing.version);
+        }
+        existing.name = updateData.name;
+        existing.description = updateData.description;
+        existing.rgb = updateData.rgb;
         return existing;
     }
 
     @Transactional
-    @CacheInvalidate(cacheName = "color-cache")
     public boolean delete(UUID id) {
         return colorRepository.deleteById(id);
     }
