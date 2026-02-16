@@ -5,26 +5,16 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.annotations.UuidGenerator;
 
 @Entity
 @Table(name = "vendor_quote")
-public class VendorQuote implements PanacheEntity.Managed {
-    @Id
-    @GeneratedValue
-    @UuidGenerator(style = UuidGenerator.Style.TIME)
-    public UUID id;
+public class VendorQuote extends CoreEntity implements PanacheEntity.Managed {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "product_vendor_sourcing_id", nullable = false)
@@ -99,9 +89,6 @@ public class VendorQuote implements PanacheEntity.Managed {
     @Column(nullable = false)
     public VendorQuoteStatus status;
 
-    @Column(name = "created_by")
-    public String createdBy;
-
     @Column(name = "submitted_by")
     public String submittedBy;
 
@@ -125,12 +112,4 @@ public class VendorQuote implements PanacheEntity.Managed {
 
     @Column(name = "deleted_by")
     public String deletedBy;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    public LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    public LocalDateTime updatedAt;
 }
