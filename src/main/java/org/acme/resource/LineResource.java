@@ -69,7 +69,7 @@ public class LineResource {
     @APIResponse(responseCode = "201", description = "Line created")
     @APIResponse(responseCode = "400", description = "Invalid line payload")
     public Response create(@Valid LineDTO.Create request, @Context UriInfo uriInfo) {
-        LOG.infof("Creating line: %s", request.lineCode());
+        LOG.infof("LINE_CREATE_ATTEMPT lineCode=%s", request.lineCode());
         Line created;
         try {
             created = lineService.create(lineMapper.toEntity(request));
@@ -88,7 +88,7 @@ public class LineResource {
     @APIResponse(responseCode = "404", description = "Line not found")
     @APIResponse(responseCode = "409", description = "Optimistic lock failure (version mismatch)")
     public Response update(@PathParam("id") UUID id, @Valid LineDTO.Update request) {
-        LOG.infof("Updating line with id: %s", id);
+        LOG.infof("LINE_UPDATE_ATTEMPT id=%s", id);
         Line updated;
         try {
             Line updateData = new Line();
@@ -113,7 +113,7 @@ public class LineResource {
     @APIResponse(responseCode = "204", description = "Line deleted")
     @APIResponse(responseCode = "404", description = "Line not found")
     public Response delete(@PathParam("id") UUID id) {
-        LOG.infof("Deleting line with id: %s", id);
+        LOG.infof("LINE_DELETE_ATTEMPT id=%s", id);
         boolean deleted = lineService.delete(id);
         if (!deleted) {
             return Response.status(Response.Status.NOT_FOUND).build();

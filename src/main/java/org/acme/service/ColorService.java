@@ -10,9 +10,12 @@ import java.util.List;
 import java.util.UUID;
 import org.acme.entity.Color;
 import org.acme.repository.ColorRepository;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class ColorService {
+
+    private static final Logger LOG = Logger.getLogger(ColorService.class);
 
     @Inject
     ColorRepository colorRepository;
@@ -36,6 +39,7 @@ public class ColorService {
         }
         color.id = null;
         colorRepository.persist(color);
+        LOG.infof("COLOR_CREATED id=%s name=%s", color.id, color.name);
         return color;
     }
 
@@ -54,11 +58,16 @@ public class ColorService {
         existing.name = updateData.name;
         existing.description = updateData.description;
         existing.rgb = updateData.rgb;
+        LOG.infof("COLOR_UPDATED id=%s", existing.id);
         return existing;
     }
 
     @Transactional
     public boolean delete(UUID id) {
-        return colorRepository.deleteById(id);
+        boolean deleted = colorRepository.deleteById(id);
+        if (deleted) {
+            LOG.infof("COLOR_DELETED id=%s", id);
+        }
+        return deleted;
     }
 }

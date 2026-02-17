@@ -7,9 +7,12 @@ import java.util.List;
 import java.util.UUID;
 import org.acme.entity.Size;
 import org.acme.repository.SizeRepository;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class SizeService {
+
+    private static final Logger LOG = Logger.getLogger(SizeService.class);
 
     @Inject
     SizeRepository sizeRepository;
@@ -32,6 +35,7 @@ public class SizeService {
         }
         size.id = null;
         sizeRepository.persist(size);
+        LOG.infof("SIZE_CREATED id=%s name=%s", size.id, size.name);
         return size;
     }
 
@@ -49,11 +53,16 @@ public class SizeService {
         }
         existing.name = updateData.name;
         existing.sizes = updateData.sizes;
+        LOG.infof("SIZE_UPDATED id=%s", existing.id);
         return existing;
     }
 
     @Transactional
     public boolean delete(UUID id) {
-        return sizeRepository.deleteById(id);
+        boolean deleted = sizeRepository.deleteById(id);
+        if (deleted) {
+            LOG.infof("SIZE_DELETED id=%s", id);
+        }
+        return deleted;
     }
 }

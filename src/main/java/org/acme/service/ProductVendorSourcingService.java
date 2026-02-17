@@ -14,9 +14,12 @@ import org.acme.entity.Vendor;
 import org.acme.repository.ProductRepository;
 import org.acme.repository.ProductVendorSourcingRepository;
 import org.acme.repository.VendorRepository;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class ProductVendorSourcingService {
+
+    private static final Logger LOG = Logger.getLogger(ProductVendorSourcingService.class);
 
     @Inject
     ProductRepository productRepository;
@@ -50,6 +53,7 @@ public class ProductVendorSourcingService {
         link.product = product;
         link.vendor = vendor;
         productVendorSourcingRepository.persist(link);
+        LOG.infof("PRODUCT_VENDOR_LINK_CREATED linkId=%s productId=%s vendorId=%s", link.id, productId, vendor.id);
         return link;
     }
 
@@ -86,6 +90,7 @@ public class ProductVendorSourcingService {
         existing.contactEmail = updateData.contactEmail;
         existing.contactPhone = updateData.contactPhone;
         
+        LOG.infof("PRODUCT_VENDOR_LINK_UPDATED linkId=%s", existing.id);
         return existing;
     }
 
@@ -96,6 +101,7 @@ public class ProductVendorSourcingService {
             return false;
         }
         productVendorSourcingRepository.delete(existing);
+        LOG.infof("PRODUCT_VENDOR_LINK_DELETED linkId=%s", linkId);
         return true;
     }
 

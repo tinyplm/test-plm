@@ -70,7 +70,7 @@ public class SizeResource {
     @APIResponse(responseCode = "201", description = "Size created")
     @APIResponse(responseCode = "400", description = "Invalid size payload")
     public Response create(@Valid SizeDTO.Create request, @Context UriInfo uriInfo) {
-        LOG.infof("Creating size: %s", request.name());
+        LOG.infof("SIZE_CREATE_ATTEMPT name=%s", request.name());
         Size created;
         try {
             created = sizeService.create(sizeMapper.toEntity(request));
@@ -89,7 +89,7 @@ public class SizeResource {
     @APIResponse(responseCode = "404", description = "Size not found")
     @APIResponse(responseCode = "409", description = "Optimistic lock failure (version mismatch)")
     public Response update(@PathParam("id") UUID id, @Valid SizeDTO.Update request) {
-        LOG.infof("Updating size with id: %s", id);
+        LOG.infof("SIZE_UPDATE_ATTEMPT id=%s", id);
         Size updated;
         try {
             Size updateData = new Size();
@@ -114,7 +114,7 @@ public class SizeResource {
     @APIResponse(responseCode = "204", description = "Size deleted")
     @APIResponse(responseCode = "404", description = "Size not found")
     public Response delete(@PathParam("id") UUID id) {
-        LOG.infof("Deleting size with id: %s", id);
+        LOG.infof("SIZE_DELETE_ATTEMPT id=%s", id);
         boolean deleted = sizeService.delete(id);
         if (!deleted) {
             return Response.status(Response.Status.NOT_FOUND).build();

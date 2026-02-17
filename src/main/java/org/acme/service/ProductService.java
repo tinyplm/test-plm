@@ -10,9 +10,12 @@ import org.acme.entity.Line;
 import org.acme.entity.Product;
 import org.acme.repository.LineRepository;
 import org.acme.repository.ProductRepository;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class ProductService {
+
+    private static final Logger LOG = Logger.getLogger(ProductService.class);
 
     @Inject
     ProductRepository productRepository;
@@ -56,6 +59,7 @@ public class ProductService {
         product.line = line;
         productRepository.persist(product);
         enrichWithImageUrl(product);
+        LOG.infof("PRODUCT_CREATED id=%s name=%s", product.id, product.name);
         return product;
     }
 
@@ -90,6 +94,7 @@ public class ProductService {
         existing.price = product.price;
         existing.quantity = product.quantity;
         enrichWithImageUrl(existing);
+        LOG.infof("PRODUCT_UPDATED id=%s", existing.id);
         return existing;
     }
 
@@ -100,6 +105,7 @@ public class ProductService {
             throw new IllegalArgumentException("Product image already exists. Use update image.");
         }
         saveImageReference(product, imageBytes);
+        LOG.infof("PRODUCT_IMAGE_ADDED id=%s", id);
         return product;
     }
 
@@ -107,6 +113,7 @@ public class ProductService {
     public Product updateImage(UUID id, byte[] imageBytes) {
         Product product = getProductOrThrow(id);
         saveImageReference(product, imageBytes);
+        LOG.infof("PRODUCT_IMAGE_UPDATED id=%s", id);
         return product;
     }
 
@@ -119,6 +126,7 @@ public class ProductService {
         productImageStorageService.deleteByReference(product.imageReference);
         product.imageReference = null;
         product.imageUrl = null;
+        LOG.infof("PRODUCT_IMAGE_REMOVED id=%s", id);
         return true;
     }
 
@@ -154,6 +162,10 @@ public class ProductService {
         if (existing.imageReference != null && !existing.imageReference.isBlank()) {
             productImageStorageService.deleteByReference(existing.imageReference);
         }
-        return productRepository.deleteById(id);
+        boolean deleted = productRepository.deleteById(id);
+        if (deleted) {
+             LOG.infof("PRODUCT_DELETED id=%s", id);
+        }
+        return deleted;
     }
 }

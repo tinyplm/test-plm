@@ -81,7 +81,7 @@ Steps:
 - Never change pom.xml unless explicitly asked
 - Never remove code unless asked
 - No Lombok
-- Java 21
+- Java 25
 - Quarkus best practices
 - Always show file paths
 

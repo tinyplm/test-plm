@@ -7,9 +7,12 @@ import java.util.List;
 import java.util.UUID;
 import org.acme.entity.Vendor;
 import org.acme.repository.VendorRepository;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class VendorService {
+
+    private static final Logger LOG = Logger.getLogger(VendorService.class);
 
     @Inject
     VendorRepository vendorRepository;
@@ -29,6 +32,7 @@ public class VendorService {
         }
         vendor.id = null;
         vendorRepository.persist(vendor);
+        LOG.infof("VENDOR_CREATED id=%s name=%s", vendor.id, vendor.name);
         return vendor;
     }
 
@@ -52,11 +56,16 @@ public class VendorService {
         existing.vendorGroup = updateData.vendorGroup;
         existing.agreementStatus = updateData.agreementStatus;
         existing.status = updateData.status;
+        LOG.infof("VENDOR_UPDATED id=%s", existing.id);
         return existing;
     }
 
     @Transactional
     public boolean delete(UUID id) {
-        return vendorRepository.deleteById(id);
+        boolean deleted = vendorRepository.deleteById(id);
+        if (deleted) {
+            LOG.infof("VENDOR_DELETED id=%s", id);
+        }
+        return deleted;
     }
 }

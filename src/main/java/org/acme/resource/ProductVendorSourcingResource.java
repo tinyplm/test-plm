@@ -71,7 +71,7 @@ public class ProductVendorSourcingResource {
             @Valid ProductVendorSourcingDTO.Create request,
             @Context UriInfo uriInfo
     ) {
-        LOG.infof("Linking vendor %s to product %s", request.vendorId(), productId);
+        LOG.infof("PRODUCT_VENDOR_LINK_ATTEMPT vendorId=%s productId=%s", request.vendorId(), productId);
         try {
             ProductVendorSourcing created = productVendorSourcingService.create(productId, productVendorSourcingMapper.toEntity(request));
             URI location = uriInfo.getAbsolutePathBuilder().path(created.id.toString()).build();
@@ -95,7 +95,7 @@ public class ProductVendorSourcingResource {
             @PathParam("linkId") UUID linkId,
             @Valid ProductVendorSourcingDTO.Update request
     ) {
-        LOG.infof("Updating vendor link %s for product %s", linkId, productId);
+        LOG.infof("PRODUCT_VENDOR_UPDATE_ATTEMPT linkId=%s productId=%s", linkId, productId);
         try {
             ProductVendorSourcing updateData = new ProductVendorSourcing();
             productVendorSourcingMapper.updateEntity(updateData, request);
@@ -117,7 +117,7 @@ public class ProductVendorSourcingResource {
     @APIResponse(responseCode = "204", description = "Vendor link removed")
     @APIResponse(responseCode = "404", description = "Product vendor link not found")
     public Response delete(@PathParam("productId") UUID productId, @PathParam("linkId") UUID linkId) {
-        LOG.infof("Removing vendor link %s from product %s", linkId, productId);
+        LOG.infof("PRODUCT_VENDOR_REMOVE_ATTEMPT linkId=%s productId=%s", linkId, productId);
         boolean deleted = productVendorSourcingService.delete(productId, linkId);
         if (!deleted) {
             return Response.status(Response.Status.NOT_FOUND).build();

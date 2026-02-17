@@ -96,7 +96,7 @@ public class VendorQuoteResource {
             @Valid VendorQuoteDTO.Create request,
             @Context UriInfo uriInfo
     ) {
-        LOG.infof("Creating quote %s for link %s", request.quoteNumber(), linkId);
+        LOG.infof("VENDOR_QUOTE_CREATE_ATTEMPT quoteNumber=%s linkId=%s", request.quoteNumber(), linkId);
         try {
             VendorQuote created = vendorQuoteService.create(productId, linkId, vendorQuoteMapper.toEntity(request));
             URI location = uriInfo.getAbsolutePathBuilder().path(created.id.toString()).build();
@@ -121,7 +121,7 @@ public class VendorQuoteResource {
             @PathParam("quoteId") UUID quoteId,
             @Valid VendorQuoteDTO.Update request
     ) {
-        LOG.infof("Updating quote %s for link %s", quoteId, linkId);
+        LOG.infof("VENDOR_QUOTE_UPDATE_ATTEMPT quoteId=%s linkId=%s", quoteId, linkId);
         try {
             VendorQuote updateData = new VendorQuote();
             vendorQuoteMapper.updateEntity(updateData, request);
@@ -149,7 +149,7 @@ public class VendorQuoteResource {
             @PathParam("quoteId") UUID quoteId,
             @Valid VendorQuoteDTO.UpdateStatus request
     ) {
-        LOG.infof("Updating status for quote %s to %s", quoteId, request.status());
+        LOG.infof("VENDOR_QUOTE_STATUS_UPDATE_ATTEMPT quoteId=%s status=%s", quoteId, request.status());
         try {
             // Note: Reuse existing command for status for now as it maps cleanly, or create DTO later
             // Assuming VendorQuoteStatusCommand is still used by service for now.
@@ -178,7 +178,7 @@ public class VendorQuoteResource {
             @PathParam("quoteId") UUID quoteId,
             @QueryParam("deletedBy") String deletedBy
     ) {
-        LOG.infof("Deleting quote %s", quoteId);
+        LOG.infof("VENDOR_QUOTE_DELETE_ATTEMPT quoteId=%s", quoteId);
         boolean deleted = vendorQuoteService.softDelete(productId, linkId, quoteId, deletedBy);
         if (!deleted) {
             return Response.status(Response.Status.NOT_FOUND).build();

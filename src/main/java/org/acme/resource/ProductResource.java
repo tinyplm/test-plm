@@ -71,7 +71,7 @@ public class ProductResource {
     @APIResponse(responseCode = "201", description = "Product created")
     @APIResponse(responseCode = "400", description = "Invalid product payload")
     public Response create(@Valid ProductDTO.Create request, @Context UriInfo uriInfo) {
-        LOG.infof("Creating product: %s", request.name());
+        LOG.infof("PRODUCT_CREATE_ATTEMPT name=%s", request.name());
         Product created;
         try {
             created = productService.create(productMapper.toEntity(request));
@@ -90,7 +90,7 @@ public class ProductResource {
     @APIResponse(responseCode = "404", description = "Product not found")
     @APIResponse(responseCode = "409", description = "Optimistic lock failure (version mismatch)")
     public Response update(@PathParam("id") UUID id, @Valid ProductDTO.Update request) {
-        LOG.infof("Updating product with id: %s", id);
+        LOG.infof("PRODUCT_UPDATE_ATTEMPT id=%s", id);
         Product updated;
         try {
             Product updateData = new Product();
@@ -115,7 +115,7 @@ public class ProductResource {
     @APIResponse(responseCode = "204", description = "Product deleted")
     @APIResponse(responseCode = "404", description = "Product not found")
     public Response delete(@PathParam("id") UUID id) {
-        LOG.infof("Deleting product with id: %s", id);
+        LOG.infof("PRODUCT_DELETE_ATTEMPT id=%s", id);
         boolean deleted = productService.delete(id);
         if (!deleted) {
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -131,7 +131,7 @@ public class ProductResource {
     @APIResponse(responseCode = "400", description = "Invalid image payload or image already exists")
     @APIResponse(responseCode = "404", description = "Product not found")
     public Response addImage(@PathParam("id") UUID id, byte[] imageBytes) {
-        LOG.infof("Adding image to product with id: %s", id);
+        LOG.infof("PRODUCT_IMAGE_ADD_ATTEMPT id=%s", id);
         try {
             Product product = productService.addImage(id, imageBytes);
             return Response.ok(productMapper.toResponse(product)).build();
@@ -150,7 +150,7 @@ public class ProductResource {
     @APIResponse(responseCode = "400", description = "Invalid image payload")
     @APIResponse(responseCode = "404", description = "Product not found")
     public Response updateImage(@PathParam("id") UUID id, byte[] imageBytes) {
-        LOG.infof("Updating image for product with id: %s", id);
+        LOG.infof("PRODUCT_IMAGE_UPDATE_ATTEMPT id=%s", id);
         try {
             Product product = productService.updateImage(id, imageBytes);
             return Response.ok(productMapper.toResponse(product)).build();
@@ -167,7 +167,7 @@ public class ProductResource {
     @APIResponse(responseCode = "204", description = "Product image removed")
     @APIResponse(responseCode = "404", description = "Product or image not found")
     public Response removeImage(@PathParam("id") UUID id) {
-        LOG.infof("Removing image from product with id: %s", id);
+        LOG.infof("PRODUCT_IMAGE_REMOVE_ATTEMPT id=%s", id);
         try {
             boolean removed = productService.removeImage(id);
             if (!removed) {

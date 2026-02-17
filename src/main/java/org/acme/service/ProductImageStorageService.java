@@ -11,9 +11,12 @@ import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class ProductImageStorageService {
+
+    private static final Logger LOG = Logger.getLogger(ProductImageStorageService.class);
 
     @Inject
     S3Client s3Client;
@@ -38,7 +41,7 @@ public class ProductImageStorageService {
                         .build(),
                 RequestBody.fromBytes(imageBytes)
         );
-
+        LOG.infof("S3_UPLOAD_SUCCESS objectKey=%s", objectKey);
         return objectKey;
     }
 
@@ -47,6 +50,7 @@ public class ProductImageStorageService {
             return;
         }
         s3Client.deleteObject(builder -> builder.bucket(bucket).key(imageReference));
+        LOG.infof("S3_DELETE_SUCCESS objectKey=%s", imageReference);
     }
 
     public String imageUrl(String imageReference) {

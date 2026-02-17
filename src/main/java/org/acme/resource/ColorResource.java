@@ -69,7 +69,7 @@ public class ColorResource {
     @APIResponse(responseCode = "201", description = "Color created")
     @APIResponse(responseCode = "400", description = "Invalid color payload")
     public Response create(@Valid ColorDTO.Create request, @Context UriInfo uriInfo) {
-        LOG.infof("Creating color: %s", request.name());
+        LOG.infof("COLOR_CREATE_ATTEMPT name=%s", request.name());
         Color created;
         try {
             created = colorService.create(colorMapper.toEntity(request));
@@ -88,7 +88,7 @@ public class ColorResource {
     @APIResponse(responseCode = "404", description = "Color not found")
     @APIResponse(responseCode = "409", description = "Optimistic lock failure (version mismatch)")
     public Response update(@PathParam("id") UUID id, @Valid ColorDTO.Update request) {
-        LOG.infof("Updating color with id: %s", id);
+        LOG.infof("COLOR_UPDATE_ATTEMPT id=%s", id);
         Color updated;
         try {
             Color updateData = new Color();
@@ -113,7 +113,7 @@ public class ColorResource {
     @APIResponse(responseCode = "204", description = "Color deleted")
     @APIResponse(responseCode = "404", description = "Color not found")
     public Response delete(@PathParam("id") UUID id) {
-        LOG.infof("Deleting color with id: %s", id);
+        LOG.infof("COLOR_DELETE_ATTEMPT id=%s", id);
         boolean deleted = colorService.delete(id);
         if (!deleted) {
             return Response.status(Response.Status.NOT_FOUND).build();

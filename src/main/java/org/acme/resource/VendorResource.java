@@ -70,7 +70,7 @@ public class VendorResource {
     @APIResponse(responseCode = "201", description = "Vendor created")
     @APIResponse(responseCode = "400", description = "Invalid vendor payload")
     public Response create(@Valid VendorDTO.Create request, @Context UriInfo uriInfo) {
-        LOG.infof("Creating vendor: %s", request.name());
+        LOG.infof("VENDOR_CREATE_ATTEMPT name=%s", request.name());
         Vendor created;
         try {
             created = vendorService.create(vendorMapper.toEntity(request));
@@ -89,7 +89,7 @@ public class VendorResource {
     @APIResponse(responseCode = "404", description = "Vendor not found")
     @APIResponse(responseCode = "409", description = "Optimistic lock failure (version mismatch)")
     public Response update(@PathParam("id") UUID id, @Valid VendorDTO.Update request) {
-        LOG.infof("Updating vendor with id: %s", id);
+        LOG.infof("VENDOR_UPDATE_ATTEMPT id=%s", id);
         Vendor updated;
         try {
             Vendor updateData = new Vendor();
@@ -114,7 +114,7 @@ public class VendorResource {
     @APIResponse(responseCode = "204", description = "Vendor deleted")
     @APIResponse(responseCode = "404", description = "Vendor not found")
     public Response delete(@PathParam("id") UUID id) {
-        LOG.infof("Deleting vendor with id: %s", id);
+        LOG.infof("VENDOR_DELETE_ATTEMPT id=%s", id);
         boolean deleted = vendorService.delete(id);
         if (!deleted) {
             return Response.status(Response.Status.NOT_FOUND).build();

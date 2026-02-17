@@ -19,9 +19,12 @@ import org.acme.entity.VendorQuoteStatus;
 import org.acme.repository.ProductRepository;
 import org.acme.repository.ProductVendorSourcingRepository;
 import org.acme.repository.VendorQuoteRepository;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class VendorQuoteService {
+
+    private static final Logger LOG = Logger.getLogger(VendorQuoteService.class);
 
     private static final Map<VendorQuoteStatus, Set<VendorQuoteStatus>> ALLOWED_TRANSITIONS = Map.of(
             VendorQuoteStatus.DRAFT,
@@ -77,6 +80,7 @@ public class VendorQuoteService {
         // quote.submittedBy set by caller or from context? Assuming passed in entity for now or handle later
         quote.deleted = false;
         vendorQuoteRepository.persist(quote);
+        LOG.infof("VENDOR_QUOTE_CREATED quoteId=%s quoteNumber=%s", quote.id, quote.quoteNumber);
         return quote;
     }
 
@@ -117,6 +121,7 @@ public class VendorQuoteService {
         quote.complianceNotes = updateData.complianceNotes;
         quote.sustainabilityNotes = updateData.sustainabilityNotes;
         
+        LOG.infof("VENDOR_QUOTE_UPDATED quoteId=%s", quote.id);
         return quote;
     }
 
@@ -152,6 +157,7 @@ public class VendorQuoteService {
         }
         quote.approvalComment = command.comment();
 
+        LOG.infof("VENDOR_QUOTE_STATUS_UPDATED quoteId=%s status=%s", quote.id, quote.status);
         return quote;
     }
 
@@ -165,6 +171,7 @@ public class VendorQuoteService {
         quote.deleted = true;
         quote.deletedAt = LocalDateTime.now();
         quote.deletedBy = deletedBy;
+        LOG.infof("VENDOR_QUOTE_DELETED quoteId=%s", quoteId);
         return true;
     }
 

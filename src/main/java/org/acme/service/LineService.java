@@ -9,9 +9,12 @@ import java.util.UUID;
 import org.acme.entity.Color;
 import org.acme.entity.Line;
 import org.acme.repository.LineRepository;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class LineService {
+
+    private static final Logger LOG = Logger.getLogger(LineService.class);
 
     @Inject
     LineRepository lineRepository;
@@ -36,6 +39,7 @@ public class LineService {
         
         line.id = null;
         lineRepository.persist(line);
+        LOG.infof("LINE_CREATED id=%s lineCode=%s", line.id, line.lineCode);
         return line;
     }
 
@@ -64,11 +68,16 @@ public class LineService {
         existing.plannedUnits = updateData.plannedUnits;
         existing.plannedRevenue = updateData.plannedRevenue;
         
+        LOG.infof("LINE_UPDATED id=%s", existing.id);
         return existing;
     }
 
     @Transactional
     public boolean delete(UUID id) {
-        return lineRepository.deleteById(id);
+        boolean deleted = lineRepository.deleteById(id);
+        if (deleted) {
+            LOG.infof("LINE_DELETED id=%s", id);
+        }
+        return deleted;
     }
 }

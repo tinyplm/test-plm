@@ -114,28 +114,37 @@ public class ColorDTO {
 
 ## 6. Service Layer
 
-**Reference:** `src/main/java/org/acme/service/ColorService.java`
+**Reference:** `src/main/java/org/acme/service/ColorService.java` & `.gemini/logging-rules.md`
 
 1.  **Scope:** `@ApplicationScoped`.
 2.  **Transactionality:** Use `@Transactional` on state-changing methods (`create`, `update`, `delete`).
-3.  **Logic:**
+3.  **Logging:** 
+    *   Declare `private static final Logger LOG`.
+    *   Log **successful** business events (`INFO`) using structured keys (e.g., `ENTITY_UPDATED id=%s`).
+4.  **Logic:**
     *   Perform business validation (e.g., duplicates).
     *   Handle **Optimistic Locking**: Check `existing.version != request.version` in `update`.
     *   Return Entities (or Pages of Entities) to the Resource layer.
-4.  **Pagination:** Use `Paging.page()` helper.
-5. Only Service layer may start transactions.
-6. Repositories MUST be transaction-agnostic.
-7. Resources MUST NOT be transactional.
+5.  **Pagination:** Use `Paging.page()` helper.
+6.  Only Service layer may start transactions.
+7.  Repositories MUST be transaction-agnostic.
+8.  Resources MUST NOT be transactional.
 
 ```java
-@Transactional
-public Color update(UUID id, Color updateData, long version) {
-    Color existing = repository.findById(id);
-    if (existing.version != version) {
-        throw new OptimisticLockException(...);
+@ApplicationScoped
+public class ColorService {
+    private static final Logger LOG = Logger.getLogger(ColorService.class);
+
+    @Transactional
+    public Color update(UUID id, Color updateData, long version) {
+        Color existing = repository.findById(id);
+        if (existing.version != version) {
+            throw new OptimisticLockException(...);
+        }
+        // copy fields
+        LOG.infof("COLOR_UPDATED id=%s", existing.id);
+        return existing;
     }
-    // copy fields
-    return existing;
 }
 ```
 
@@ -143,20 +152,38 @@ public Color update(UUID id, Color updateData, long version) {
 
 ## 7. Resource Layer (API)
 
-**Reference:** `src/main/java/org/acme/resource/ColorResource.java` & `.gemini/api-consistency-rules.md`
+**Reference:** `src/main/java/org/acme/resource/ColorResource.java` & `.gemini/logging-rules.md`
 
-1.  **Annotations:**
+1.  **Scope:** `@ApplicationScoped`.
+2.  **Logging:**
+    *   Declare `private static final Logger LOG`.
+    *   Log **API intent/attempts** (`INFO`) using structured keys (e.g., `ENTITY_CREATE_ATTEMPT key=value`).
+    *   Log exceptions at the boundary (`ERROR`).
+3.  **Annotations:**
     *   `@Path`, `@Tag` (OpenAPI)
     *   `@RunOnVirtualThread` (High throughput)
     *   `@Consumes`/`@Produces` (`MediaType.APPLICATION_JSON`)
-2.  **Endpoints:** Implement standard CRUD:
+4.  **Endpoints:** Implement standard CRUD:
     *   `GET / (paged)` -> `PageResult<DTO.Response>`
     *   `GET /{id}` -> `DTO.Response`
     *   `POST /` -> `201 Created` + Location Header
     *   `PUT /{id}` -> `200 OK` (Handle `409 Conflict` for optimistic locking)
     *   `DELETE /{id}` -> `204 No Content`
-3.  **Dependency Injection:** Inject `Service` and `Mapper`.
-4.  **No Logic:** Keep controllers thin. Delegate to Service.
+5.  **Dependency Injection:** Inject `Service` and `Mapper`.
+6.  **No Logic:** Keep controllers thin. Delegate to Service.
+
+```java
+@Path("/colors")
+public class ColorResource {
+    private static final Logger LOG = Logger.getLogger(ColorResource.class);
+
+    @POST
+    public Response create(@Valid ColorDTO.Create request) {
+        LOG.infof("COLOR_CREATE_ATTEMPT name=%s", request.name());
+        // ... call service ...
+    }
+}
+```
 
 ---
 
@@ -280,5 +307,6 @@ void validationAndErrorHandling() {
 - [ ] **DTO:** Records defined, Validation added.
 - [ ] **Mapper:** Conversions implemented.
 - [ ] **Service:** Transactional boundaries, Optimistic Locking check.
+- [ ] **Logging:** Structured logs added to Service (success events) and Resource (API intent).
 - [ ] **Resource:** Virtual Threads, OpenAPI tags, Pagination, Error mapping.
 - [ ] **Tests:** Integration tests covering Happy Path and Negative cases.
